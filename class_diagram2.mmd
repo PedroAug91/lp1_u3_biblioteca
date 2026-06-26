@@ -7,16 +7,21 @@ classDiagram
 class Person{
     +id
     +name
+    +login()
+    +searchItems()
+    +viewItems()
 }
 
 class Visitor{
-    +viewItem()
-    +searchItems()
+    +donateBook()
 }
 
-class Student{
+class AcademicMember{
     +borrowItem()
+    +donateBook()
 }
+
+class Student
 
 class Professor{
     +borrowForStudent()
@@ -37,9 +42,11 @@ class Librarian{
 }
 
 Person <|-- Visitor
-Visitor <|-- Student
-Student <|-- Professor
+Person <|-- AcademicMember
 Person <|-- Librarian
+
+AcademicMember <|-- Student
+AcademicMember <|-- Professor
 
 
 %%==========================
@@ -49,13 +56,13 @@ Person <|-- Librarian
 class Research{
     -title
     -description
-    -members : vector~Person~
+    -members : vector~AcademicMember~
     +publish()
     +reserveItem()
     +scheduleRestrictedConsultation()
 }
 
-Research "1" *-- "1..*" Person : members
+Research "1" *-- "1..*" AcademicMember : researchers
 
 
 %%==========================
