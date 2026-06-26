@@ -1,0 +1,88 @@
+classDiagram
+
+%%==========================
+%% PESSOAS
+%%==========================
+
+class Person{
+    +id
+    +name
+}
+
+class Visitor{
+    +viewItem()
+    +searchItems()
+}
+
+class Student{
+    +borrowItem()
+}
+
+class Professor{
+    +borrowForStudent()
+    +reserveItem()
+    +requestRestrictedAccess()
+}
+
+class Librarian{
+    +registerPerson()
+    +updatePerson()
+    +registerItem()
+    +updateItem()
+    +registerResearch()
+    +sanctionUser()
+    +cancelReservation()
+    +cancelLoan()
+    +cancelRestrictedConsultation()
+}
+
+Person <|-- Visitor
+Visitor <|-- Student
+Student <|-- Professor
+Person <|-- Librarian
+
+
+%%==========================
+%% PESQUISA
+%%==========================
+
+class Research{
+    -title
+    -description
+    -members : vector~Person~
+    +publish()
+    +reserveItem()
+    +scheduleRestrictedConsultation()
+}
+
+Research "1" *-- "1..*" Person : members
+
+
+%%==========================
+%% ITENS
+%%==========================
+
+class Item{
+    +id
+    +title
+}
+
+class PublicItem
+
+class RestrictedItem
+
+class LoanableItem{
+    +borrow()
+    +returnItem()
+    +reserve()
+}
+
+class ExhibitionItem{
+    +view()
+}
+
+Item <|-- PublicItem
+Item <|-- RestrictedItem
+
+PublicItem <|-- LoanableItem
+PublicItem <|-- ExhibitionItem
