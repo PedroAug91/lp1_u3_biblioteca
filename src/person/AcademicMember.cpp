@@ -3,6 +3,13 @@
 #include <iostream>
 #include <string>
 
+void AcademicMember::print() {
+  std::cout << "Nome: " << name << '\n'
+            << "Matrícula: " << matricula << '\n'
+            << "Empréstimos ativos: " << ActiveLoans << '\n'
+            << "Empréstimos restantes: " << (maxActiveLoans - ActiveLoans) << '\n';
+}
+
 void AcademicMember::searchItem() { std::cout << "procurando items\n\n"; }
 
 void AcademicMember::BorrowItem(std::vector<LoanableItem> &loanableList,

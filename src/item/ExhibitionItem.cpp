@@ -7,6 +7,11 @@ void ExhibitionItem::setDisplayArea(std::string s) {
             << this->getDisplayArea();
 }
 
+void ExhibitionItem::print() {
+  Item::print();
+  std::cout << "Localização: " << getDisplayArea() << "\n";
+}
+
 void ExhibitionItem::accessItem() {
   std::cout << "DESCRIÇÃO DO ITEM: \n";
   std::cout << "nome: " << this->name << "\n";

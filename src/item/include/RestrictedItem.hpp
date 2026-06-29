@@ -10,6 +10,13 @@ public:
 
   void accessItem() override;
 
+  void print() override;
+
+  bool create(Person *p_person) override;
+  bool read(std::string person_id) override;
+  bool update(std::string person_id) override;
+  bool remove(std::string person_id) override;
+
   void RestrictedAccess();
 
   RestrictedItem(std::string n, std::string i);

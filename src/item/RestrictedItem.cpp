@@ -6,6 +6,11 @@ void RestrictedItem::setStatus(Status s) {
   std::cout << "O status de um RestrictedItem não pode ser alterado.\n";
 }
 
+void RestrictedItem::print() {
+  Item::print();
+  std::cout << "Este item é de acesso restrito.\n";
+}
+
 void RestrictedItem::accessItem() {
   std::cout << this->name << "\n";
   std::cout << "Esse item não está disponível ao acesso do público, agende uma "

@@ -5,6 +5,11 @@
 void PublicItem::setDisplayArea(std::string s) { this->displayArea = s; };
 std::string PublicItem::getDisplayArea() const { return this->displayArea; };
 
+void PublicItem::print() {
+  Item::print();
+  std::cout << "Localização: " << getDisplayArea() << "\n";
+}
+
 void PublicItem::accessItem() {
   std::cout << "DESCRIÇÃO DO ITEM: \n";
   std::cout << "nome: " << name << "\n";

@@ -2,6 +2,16 @@
 #include "include/Professor.hpp"
 #include <iostream>
 
+#define MAX_ACTIVE_LOANS_PROFESSOR 60;
+
+void Professor::print() {
+  std::cout << "Nome: " << this->name << '\n'
+            << "Matrícula: " << this->matricula << '\n'
+            << "Empréstimos ativos: " << this->ActiveLoans << '\n'
+            << "Empréstimos restantes: "
+            << (this->maxActiveLoans - this->ActiveLoans) << '\n';
+}
+
 void Professor::RequestRestrictedAccess() {
   std::cout
       << "\n\nprimeiro mostra ao professor a tabela de horários disponíveis, "

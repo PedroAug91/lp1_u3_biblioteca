@@ -1,6 +1,11 @@
 #include "include/LoanableItem.hpp"
 #include <iostream>
 
+void LoanableItem::print() {
+  PublicItem::print();
+  std::cout << "Responsável: " << responsibleId << "\n";
+}
+
 void LoanableItem::accessItem() {
   std::cout << "DESCRIÇÃO DO ITEM: \n";
   std::cout << "nome: " << name << "\n";
