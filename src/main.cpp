@@ -8,6 +8,9 @@ enum Status {
     UNAVAILABLE
 };
 
+int maxActiveLoansProfessor = 60;
+int maxActiveLoansStudent = 3;
+
 
 
 
@@ -46,7 +49,7 @@ public:
 
 };
 
-class RestrictedItem :public Item{
+class RestrictedItem final :public Item{ //final para evitar que uma classe filha mude os métodos que restringem o acesso 
     public: 
     
     void setStatus(Status s) override {
@@ -56,6 +59,10 @@ class RestrictedItem :public Item{
     void accessItem() override {
         cout << name << "\n";
         cout << "Esse item não está disponível ao acesso do público, agende uma consulta particular\n";
+    }
+    
+    void RestrictedAccess(){ // algo para horários disponíveis e selecionar um bibliotecário como curador
+        cout<<"algum texto de informações restritas";
     }
     
     RestrictedItem(string n, string i): Item(n, UNAVAILABLE, i){}
@@ -108,6 +115,7 @@ class LoanableItem : public PublicItem{
 };
 
 class ExhibitionItem : public PublicItem{
+    public:
      void setDisplayArea(string s) override {
         cout << "Essa exposiçao não pode ser retirada de seu local:"<< getDisplayArea();
     }
@@ -140,42 +148,34 @@ class AcademicMember :public Person{// classe abstrata
 public:
     string name;
     string matricula; 
-    
+    int maxActiveLoans;
+    int ActiveLoans;
 
     void searchItem() override{
-        cout <<"procurando items";
-    }
-    virtual void ReturnItem(vector<LoanableItem>& loanableList, string itemId) =0;
-    virtual void BorrowItem(vector<LoanableItem>& loanableList, string itemId) = 0;
-    
-    AcademicMember( string n , string m){
-        name = n;
-        matricula = m; 
+        cout <<"procurando items\n\n";
     }
     
-};
-
-class Student : public AcademicMember{
-    public:
-    
-
-    
-void BorrowItem(vector<LoanableItem>& loanableList, string itemId) override {
+void BorrowItem(vector<LoanableItem>& loanableList, string itemId)  {
 
     for (int i = 0; i < loanableList.size(); i++) {
 
         if (loanableList[i].id == itemId) {
 
             if (loanableList[i].getStatus() == AVAILABLE) {
-
-                loanableList[i].setStatus(BORROWED);
-                loanableList[i].responsibleId = matricula;
-                loanableList[i].setDisplayArea("não está na biblioteca");
-
+                if(ActiveLoans< maxActiveLoans){
+                    loanableList[i].setStatus(BORROWED);
+                    loanableList[i].responsibleId = matricula;
+                    loanableList[i].setDisplayArea("não está na biblioteca");
+                    ActiveLoans++;
                 cout << "Item "
                      << loanableList[i].name
                      << " emprestado para "
-                     << name << endl;
+                     << name << "que tem " <<  ActiveLoans << " empréstimo(s) ativos"<<endl;
+                     
+                }
+                else{
+                    cout << "usuário atingiu quantidade máxima de empréstimos: " << ActiveLoans <<"\n\n";
+                }
             }
             else {
 
@@ -202,13 +202,13 @@ void ReturnItem(vector<LoanableItem>& loanableList, string itemId) {
                     loanableList[c].responsibleId = "0";
                     loanableList[c].setStatus(AVAILABLE) ;
                     loanableList[c].setDisplayArea("depósito de devoluções");
-
+                    ActiveLoans--;
                     cout << "Item "
                          << loanableList[c].name
                          << " (" << loanableList[c].id
                          << ") devolvido por "
                          << name
-                         << "\n\n";
+                         << " que tem " <<  ActiveLoans << " empréstimo(s) ativos"<<endl;
 
                 } else {
 
@@ -229,11 +229,41 @@ void ReturnItem(vector<LoanableItem>& loanableList, string itemId) {
     cout << "Item não encontrado.\n\n";
 }
     
-        Student(string n, string m): AcademicMember(n, m) {
-        }
+    
+    AcademicMember( string n , string m, int maxLoans, int loans){
+        name = n;
+        matricula = m; 
+        maxActiveLoans= maxLoans;
+        ActiveLoans = loans;
+    }
     
 };
 
+class Student : public AcademicMember{
+    public:
+    static const int DefaultMaxActiveLoans = 3;;
+          // O que um estudante pode fazer que um professor não 
+        Student(string n, string m ): AcademicMember(n, m , DefaultMaxActiveLoans , 0) {
+        }
+};
+
+
+class Professor : public AcademicMember{
+    public:
+   static const int DefaultMaxActiveLoans = 10;
+   
+    void RequestRestrictedAccess(){
+        cout<< "\n\nprimeiro mostra ao professor a tabela de horários disponíveis, depois o professor escolhe o horário.\n";
+        cout<< "depois opcionalmente o professor pode inserir até 5 outros objetos academic member para participarem da visita\n";
+        cout<< "Depois é emitido comprovante de agendamento \n\n";
+    }
+
+
+    Professor(string n, string m ): AcademicMember(n, m,  DefaultMaxActiveLoans, 0)  {
+    }
+    
+    
+};
 
 
 
@@ -285,16 +315,33 @@ AcademicUsers.push_back(new Student("gustavo", "004"));
 AcademicUsers.push_back(new Student("João", "005"));
 AcademicUsers.push_back(new Student("Ana", "006"));
 AcademicUsers.push_back(new Student("Carlos", "007"));
-    
-
+AcademicUsers.push_back(new Professor("gustavo", "008"));
+AcademicUsers.push_back(new Professor("João", "009"));
+AcademicUsers.push_back(new Student("Ana", "010"));
+AcademicUsers.push_back(new Student("Carlos", "011"));
+AcademicUsers.push_back(new Professor("Carlos", "012"));
+AcademicUsers.push_back(new Professor("Mariana", "013"));
+AcademicUsers.push_back(new Professor("Roberto", "014"));
    
    
    
-///////////////////////////////////////  AÇÕES DE TESTE /////////////////////////////////////////////////////
+   
+   ///////////////////////////////////////  AÇÕES DE TESTE /////////////////////////////////////////////////////
 AcademicUsers[0]->BorrowItem(LoanableList, "007"); 
-AcademicUsers[1]->BorrowItem(LoanableList, "007"); 
+AcademicUsers[1]->BorrowItem(LoanableList, "007");  // Livro já emprestado por outra pessoa
 AcademicUsers[1]->BorrowItem(LoanableList, "009"); 
 AcademicUsers[0]->ReturnItem(LoanableList, "007");
+AcademicUsers[1]->ReturnItem(LoanableList, "009");
+
+AcademicUsers[0]->BorrowItem(LoanableList, "010"); //Limite de emprestimo por aluno
+AcademicUsers[0]->BorrowItem(LoanableList, "011"); 
+AcademicUsers[0]->BorrowItem(LoanableList, "012"); 
+AcademicUsers[0]->BorrowItem(LoanableList, "013"); 
+
+AcademicUsers[12]->BorrowItem(LoanableList, "007"); //Limite de emprestimo por professor maior que aluno
+AcademicUsers[12]->BorrowItem(LoanableList, "006"); 
+AcademicUsers[12]->BorrowItem(LoanableList, "008"); 
+AcademicUsers[12]->BorrowItem(LoanableList, "009"); 
 
     return 0;
 }
