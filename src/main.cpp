@@ -1,6 +1,11 @@
 #include <iostream>
 using namespace std; 
 #include <vector>
+#include <ctime>
+
+time_t agora = time(nullptr); // Determina o tempo atual
+//  time_t agora = time(nullptr) + i * 24 * 60 * 60 // Serve para testar avançando o tempo alguns dias 
+// Necessário para implementar o prazo dos empréstimos
 
 enum Status {
     BORROWED,
@@ -10,6 +15,14 @@ enum Status {
 
 int maxActiveLoansProfessor = 60;
 int maxActiveLoansStudent = 3;
+
+
+enum Horarios{
+    M56,
+    T34,
+    N12
+};
+
 
 
 
@@ -49,24 +62,7 @@ public:
 
 };
 
-class RestrictedItem final :public Item{ //final para evitar que uma classe filha mude os métodos que restringem o acesso 
-    public: 
-    
-    void setStatus(Status s) override {
-        cout << "O status de um RestrictedItem não pode ser alterado.\n";
-    }
-    
-    void accessItem() override {
-        cout << name << "\n";
-        cout << "Esse item não está disponível ao acesso do público, agende uma consulta particular\n";
-    }
-    
-    void RestrictedAccess(){ // algo para horários disponíveis e selecionar um bibliotecário como curador
-        cout<<"algum texto de informações restritas";
-    }
-    
-    RestrictedItem(string n, string i): Item(n, UNAVAILABLE, i){}
-};
+
 
 class PublicItem : public Item{
     private: 
@@ -248,6 +244,35 @@ class Student : public AcademicMember{
 };
 
 
+class Visit{
+    time_t dia ; 
+    Horarios horario;
+    AcademicMember* participantes[5];
+};
+
+class RestrictedItem final :public Item{ //final para evitar que uma classe filha mude os métodos que restringem o acesso 
+    public: 
+    
+    void setStatus(Status s) override {
+        cout << "O status de um RestrictedItem não pode ser alterado.\n";
+    }
+    
+    void accessItem() override {
+        cout << name << "\n";
+        cout << "Esse item não está disponível ao acesso do público, agende uma consulta particular\n";
+    }
+    
+    Visit   AccessAppointments[4][2] ; // Para os 5 dias seguintes, para 3 horários em cada um desses dias 
+    
+    
+    
+    void RestrictedAccess(){ // algo para horários disponíveis e selecionar um bibliotecário como curador
+        cout<<"algum texto de informações restritas";
+    }
+    
+    RestrictedItem(string n, string i): Item(n, UNAVAILABLE, i){}
+};
+
 class Professor : public AcademicMember{
     public:
    static const int DefaultMaxActiveLoans = 10;
@@ -255,7 +280,7 @@ class Professor : public AcademicMember{
     void RequestRestrictedAccess(){
         cout<< "\n\nprimeiro mostra ao professor a tabela de horários disponíveis, depois o professor escolhe o horário.\n";
         cout<< "depois opcionalmente o professor pode inserir até 5 outros objetos academic member para participarem da visita\n";
-        cout<< "Depois é emitido comprovante de agendamento \n\n";
+        cout<< "Depois é emitido comprovante de agendamento (basicamente imprimir o struct)\n\n";
     }
 
 
