@@ -3,7 +3,7 @@
 all: compile
 
 run: compile
-	cd build && echo "\n======\n" && ./lp1_biblioteca
+	cd build && echo "\n======\n" && ./build/src/lp1_biblioteca
 
 test: compile
 	cd build && ctest .
