@@ -1,5 +1,5 @@
 #include <iostream>
-using namespace std;
+using namespace std; 
 #include <vector>
 
 enum Status {
@@ -8,176 +8,293 @@ enum Status {
     UNAVAILABLE
 };
 
-class Item {
-public:
-    string id;
-    string name;
+
+
+
+///////////////////////CLASSES ITEMS ///////////////////////////////////////////////
+
+class Item { // Classe abstrata 
+private:
     Status status;
-    string responsibleId; // id da pessoa responsável por esse item (pode ser a propria biblioteca id = "0")
-
-    Item(string n, Status s, string ir, string i) {
-        name = n;
-        id = i;
-        status = s;
-        responsibleId = ir;
-    }
-};
-
-class Person {
 public:
-    string name;
     string id;
+    string name;
 
-    Person(string n, string i) {
+    
+    virtual void accessItem() = 0;    
+    
+
+    Status getStatus() const {
+        return status;
+    }
+
+    virtual void setStatus(Status s) {
+        status = s;
+    }
+
+    Item(string n, Status s, string i) {
         name = n;
         id = i;
+        setStatus(s);
+        
+    }
+    
+
+    virtual ~Item() {};
+    
+    
+
+};
+
+class RestrictedItem :public Item{
+    public: 
+    
+    void setStatus(Status s) override {
+        cout << "O status de um RestrictedItem não pode ser alterado.\n";
+    }
+    
+    void accessItem() override {
+        cout << name << "\n";
+        cout << "Esse item não está disponível ao acesso do público, agende uma consulta particular\n";
+    }
+    
+    RestrictedItem(string n, string i): Item(n, UNAVAILABLE, i){}
+};
+
+class PublicItem : public Item{
+    private: 
+       string DisplayArea; // Código que indica local de exposição  do livro
+    public:
+    string getDisplayArea() const {
+        return DisplayArea;
+    }
+
+    virtual void setDisplayArea(string s) {
+        DisplayArea = s;
+    }
+    
+    
+    
+    void accessItem ()  override{
+        cout << "DESCRIÇÃO DO ITEM: \n" ;
+        cout << "nome: " << name<< "\n";
+        cout << "código de identificação: " << id<< "\n";
+        cout<< "O item pode ser visto livremente em" << getDisplayArea()<<"\n";
+        cout << "ESTE ITEM É : Lorem Ipsum is simply dummy text of the printing and typesetting\name industry. Lorem Ipsum has been the industry's standard dummy text e\nver since 1966, when designers at Letraset and James Mosley, t\nhe librarian ";
+        cout << "\n\n";
+}
+    PublicItem( string n, Status s, string i, string Da= "depósito01" ) : Item( n,  s,  i){
+        setDisplayArea(Da);
     }
 };
 
-class LibraryRepository {
-public:
-    string id = "001";
-    vector<Item> items;
-    vector<Person> users;
-
-    /*
-    virtual void addItem(Item item) = 0;
-    virtual void removeItem(Item item) = 0;
-    virtual void updateItem(Item item) = 0;
-    virtual Item findItemByName(string name) = 0;
-    */
-
-    void listItems() {
-        cout << "LISTANDO ITEMS \n";
-        for (int c = 0; c < items.size(); c++) {
-            cout << "NOME: " << items[c].name
-                 << ", STATUS: " << items[c].status
-                 << ", ID DO RESPONSÁVEL: " << items[c].responsibleId;
-            cout << "\n";
-        }
+class LoanableItem : public PublicItem{
+    public:
+    string responsibleId;
+    
+        void accessItem ()  override{
+        cout << "DESCRIÇÃO DO ITEM: \n" ;
+        cout << "nome: " << name<< "\n";
+        cout << "código de identificação: " << id<< "\n";
+        cout<< "O item pode ser visto livremente em" << getDisplayArea()<<"\n";
+        cout << "ESTE ITEM É : Lorem Ipsum is simply dummy text of the printing and typesetting\name industry. Lorem Ipsum has been the industry's standard dummy text e\nver since 1966, when designers at Letraset and James Mosley, t\nhe librarian ";
         cout << "\n\n";
     }
-
-    void listUsers() {
-        cout << "LISTANDO USUÁRIOS: \n";
-        for (int c = 0; c < users.size(); c++) {
-            cout << "NOME: " << users[c].name
-                 << ", ID: " << users[c].id;
-            cout << "\n";
-        }
+ 
+    LoanableItem( string n, Status s,  string i, string Da ="depósito01"  , string rid = "0") : PublicItem( n, s, i, Da) {
+  
+        responsibleId = rid;
     }
-
-
-    void lendItem(string  idPerson, string idItem , int days) {
-        
-        for(int d = 0 ; d < users.size() ; d++){
-            
-            if( users[d].id == idPerson ){
-                
-                for(int c = 0 ; c < items.size() ; c++){
-                    
-                    if( items[c].id == idItem ){
-                        
-                        if (items[c].status == AVAILABLE) {
-                            items[c].responsibleId = users[d].id;
-                            items[c].status = BORROWED;
-                            cout << "Item " << items[c].name << " (" << items[c].id
-                            << ") emprestado a " << users[d].name << "\n\n";
-                        } else {
-                            cout << "Item " << items[c].name << " (" << items[c].id
-                            << ") Não disponível para empréstimo \n\n";
-                        }
-                    }
-                }
-        
-            
-                
-            }
-       
-        }
-    }
-    
-    void returnItem(string idPerson, string idItem, int days) {
-    bool userExists  = false; // Ver se existem antes de executar
-    bool itemExists = false; // Falta implementar !!!
-    
-    for (int d = 0; d < users.size(); d++) {
-
-        if (users[d].id == idPerson) {
-
-            for (int c = 0; c < items.size(); c++) {
-
-                if (items[c].id == idItem) {
-
-                    if (items[c].status == BORROWED) {
-
-                        if (items[c].responsibleId == idPerson) {
-
-                            items[c].responsibleId = "0";
-
-                            items[c].status = AVAILABLE;
-
-                            cout << "Item " << items[c].name
-                                 << " (" << items[c].id
-                                 << ") devolvido por " << users[d].name
-                                 << "\n\n";
-
-                        } else {
-                            cout << " esse usuário não pegou esse item emprestado\n\n";
-                        }
-
-                    } else {
-                        cout << "Item não foi emprestado \n\n";
-                    }
-                }
-            }
-        
-        }
-    }
-}
 };
 
-int main() {
-    vector<Item> items = {
-        Item("Dom Casmurro", AVAILABLE, "0", "100"),
-        Item("Dom Casmurro", AVAILABLE, "0", "101"),
-        Item("Dom Casmurro", UNAVAILABLE, "0", "102"),
-        Item("1984", AVAILABLE, "0", "200"),
-        Item("1984", UNAVAILABLE, "0", "201"),
-        Item("The Hobbit", AVAILABLE, "0", "300"),
-        Item("Clean Code", AVAILABLE, "0", "401"),
-        Item("Clean Code", UNAVAILABLE, "0", "402"),
-        Item("Clean Code", AVAILABLE, "0", "403"),
-        Item("Clean Code", AVAILABLE, "0", "404"),
-        Item("Clean Code", AVAILABLE, "0", "405"),
-        Item("Animal Farm", UNAVAILABLE, "0", "500")
-    };
-
-    vector<Person> users = {
-        Person("Ana", "002"),
-        Person("João", "003"),
-        Person("Maria", "004"),
-        Person("Pedro", "005")
-    };
-
-    LibraryRepository library;
-    library.items = items;
-    library.users = users;
+class ExhibitionItem : public PublicItem{
+     void setDisplayArea(string s) override {
+        cout << "Essa exposiçao não pode ser retirada de seu local:"<< getDisplayArea();
+    }
     
+     void accessItem ()  override{
+        cout << "DESCRIÇÃO DO ITEM: \n" ;
+        cout << "nome: " << name<< "\n";
+        cout << "código de identificação: " << id<< "\n";
+        cout<< "O item pode ser visto livremente em" << getDisplayArea()<<"\n";
+        cout << "ESTE ITEM É : informações sobre a exposiçãoinformações sobre a exposição\ninformações sobre a exposiçãotandard dummy text e\nver since 1informações sobre a exposiçãoet and James Mosley, t\nhe librarian ";
+        cout << "\n\n";
+    }
     
-    library.lendItem("002", "100", 20);
-    library.lendItem("003", "100", 20); // Já emprestado
-    library.lendItem("003", "101", 20); // Emprestando outra cópia
+        ExhibitionItem( string n, Status s,  string i, string Da ="Área de exposição01"  ) : PublicItem( n, s, i, Da) {
+  
+    }
+    
+};
+
+
+//////////////////////////////////CLASSES PERSON ///////////////////////////////////
+
+class Person { // interface
+public:
+
+    virtual void searchItem() = 0;
+};
+
+class AcademicMember :public Person{// classe abstrata
+public:
+    string name;
+    string matricula; 
+    
+
+    void searchItem() override{
+        cout <<"procurando items";
+    }
+    virtual void ReturnItem(vector<LoanableItem>& loanableList, string itemId) =0;
+    virtual void BorrowItem(vector<LoanableItem>& loanableList, string itemId) = 0;
+    
+    AcademicMember( string n , string m){
+        name = n;
+        matricula = m; 
+    }
+    
+};
+
+class Student : public AcademicMember{
+    public:
+    
+
+    
+void BorrowItem(vector<LoanableItem>& loanableList, string itemId) override {
+
+    for (int i = 0; i < loanableList.size(); i++) {
+
+        if (loanableList[i].id == itemId) {
+
+            if (loanableList[i].getStatus() == AVAILABLE) {
+
+                loanableList[i].setStatus(BORROWED);
+                loanableList[i].responsibleId = matricula;
+                loanableList[i].setDisplayArea("não está na biblioteca");
+
+                cout << "Item "
+                     << loanableList[i].name
+                     << " emprestado para "
+                     << name << endl;
+            }
+            else {
+
+                cout << "Item indisponível." << endl;
+            }
+
+            return;
+        }
+    }
+
+    cout << "Item não encontrado." << endl;
+}
+
+void ReturnItem(vector<LoanableItem>& loanableList, string itemId) {
+
+    for (int c = 0; c < loanableList.size(); c++) {
+
+        if (loanableList[c].id == itemId) {
+
+            if (loanableList[c].getStatus() == BORROWED) {
+
+                if (loanableList[c].responsibleId == matricula) {
+
+                    loanableList[c].responsibleId = "0";
+                    loanableList[c].setStatus(AVAILABLE) ;
+                    loanableList[c].setDisplayArea("depósito de devoluções");
+
+                    cout << "Item "
+                         << loanableList[c].name
+                         << " (" << loanableList[c].id
+                         << ") devolvido por "
+                         << name
+                         << "\n\n";
+
+                } else {
+
+                    cout << "Esse usuário não pegou esse item emprestado.\n\n";
+
+                }
+
+            } else {
+
+                cout << "O item não está emprestado.\n\n";
+
+            }
+
+            return;
+        }
+    }
+
+    cout << "Item não encontrado.\n\n";
+}
+    
+        Student(string n, string m): AcademicMember(n, m) {
+        }
+    
+};
 
 
 
-    library.listUsers();
-    cout << "\n\n";
-    library.listItems();
 
-    library.returnItem("002", "100", 20);
-    library.returnItem("002", "100", 20);
 
+
+
+int main(){
+    
+////////////////////////VETORES DE OBJETOS DE TESTE ////////////////////////////////
+
+vector<LoanableItem> LoanableList;
+
+LoanableList.push_back(LoanableItem("Dom Casmurro", UNAVAILABLE , "002"));
+LoanableList.push_back(LoanableItem("Clean Code", UNAVAILABLE , "003"));
+LoanableList.push_back(LoanableItem("Animal Farm", UNAVAILABLE , "004"));
+LoanableList.push_back(LoanableItem("1984", UNAVAILABLE , "005"));
+LoanableList.push_back(LoanableItem("Dom Casmurro", AVAILABLE , "006"));
+LoanableList.push_back(LoanableItem("Clean Code", AVAILABLE , "007"));
+LoanableList.push_back(LoanableItem("Animal Farm", AVAILABLE , "008"));
+LoanableList.push_back(LoanableItem("1984", AVAILABLE , "009"));
+LoanableList.push_back(LoanableItem("Dom Casmurro", AVAILABLE , "010"));
+LoanableList.push_back(LoanableItem("Clean Code", AVAILABLE , "011"));
+LoanableList.push_back(LoanableItem("Animal Farm", AVAILABLE , "012"));
+LoanableList.push_back(LoanableItem("1984", AVAILABLE , "013"));
+
+vector<RestrictedItem> restrictedList;
+
+restrictedList.push_back(RestrictedItem("Enciclopédia Britânica", "R001"));
+restrictedList.push_back(RestrictedItem("Atlas Mundial", "R002"));
+restrictedList.push_back(RestrictedItem("Dicionário Oxford", "R003"));
+restrictedList.push_back(RestrictedItem("Manuscritos Históricos", "R004"));
+restrictedList.push_back(RestrictedItem("Coleção de Mapas Antigos", "R005"));
+
+vector<ExhibitionItem> exhibitionList;
+
+exhibitionList.push_back(ExhibitionItem("Máscara Funerária Egípcia", AVAILABLE, "E001", "Sala Egito Antigo"));
+exhibitionList.push_back(ExhibitionItem("Escultura Grega Clássica", AVAILABLE, "E002", "Galeria Grécia"));
+exhibitionList.push_back(ExhibitionItem("Armadura Medieval", AVAILABLE, "E003", "Sala Idade Média"));
+exhibitionList.push_back(ExhibitionItem("Pintura Renacentista", AVAILABLE, "E004", "Galeria Renascimento"));
+exhibitionList.push_back(ExhibitionItem("Fóssil de Dinossauro", AVAILABLE, "E005", "Sala de Paleontologia"));
+
+
+    
+vector<AcademicMember*> AcademicUsers; //Mesmo vector para alunos e professores
+
+AcademicUsers.push_back(new Student("Ana", "002"));
+AcademicUsers.push_back(new Student("João", "003"));
+AcademicUsers.push_back(new Student("gustavo", "004"));
+AcademicUsers.push_back(new Student("João", "005"));
+AcademicUsers.push_back(new Student("Ana", "006"));
+AcademicUsers.push_back(new Student("Carlos", "007"));
+    
+
+   
+   
+   
+///////////////////////////////////////  AÇÕES DE TESTE /////////////////////////////////////////////////////
+AcademicUsers[0]->BorrowItem(LoanableList, "007"); 
+AcademicUsers[1]->BorrowItem(LoanableList, "007"); 
+AcademicUsers[1]->BorrowItem(LoanableList, "009"); 
+AcademicUsers[0]->ReturnItem(LoanableList, "007");
 
     return 0;
 }
