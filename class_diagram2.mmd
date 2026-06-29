@@ -1,95 +1,102 @@
 classDiagram
 
-%%==========================
-%% PESSOAS
-%%==========================
-
-class Person{
-    +id
-    +name
-    +login()
-    +searchItems()
-    +viewItems()
+class Item {
+    <<abstract>>
+    - Status status
+    + string id
+    + string name
+    + accessItem()*
+    + setStatus(Status)
+    + getStatus() Status
 }
 
-class Visitor{
-    +donateBook()
+class PublicItem {
+    - string DisplayArea
+    + accessItem()
+    + setDisplayArea(string)
 }
 
-class AcademicMember{
-    +borrowItem()
-    +donateBook()
+class LoanableItem {
+    + string responsibleId
+    + accessItem()
 }
 
-class Student
-
-class Professor{
-    +borrowForStudent()
-    +reserveItem()
-    +requestRestrictedAccess()
+class ExhibitionItem {
+    + setDisplayArea(string)
+    + accessItem()
 }
 
-class Librarian{
-    +registerPerson()
-    +updatePerson()
-    +registerItem()
-    +updateItem()
-    +registerResearch()
-    +sanctionUser()
-    +cancelReservation()
-    +cancelLoan()
-    +cancelRestrictedConsultation()
+class RestrictedItem {
+    + Visit AccessAppointments[4][2]
+    + setStatus(Status)
+    + accessItem()
+    + getAvailableAppointments()
+    + printHorario(Horarios)
 }
 
-Person <|-- Visitor
-Person <|-- AcademicMember
-Person <|-- Librarian
+class Visit {
+    + time_t dia
+    + Horarios horario
+    + AcademicMember* participantes[5]
+    + VisitStatus VisitState
+}
 
+class Person {
+    <<interface>>
+    + searchItem()*
+}
+
+class AcademicMember {
+    + string name
+    + string matricula
+    + int maxActiveLoans
+    + int ActiveLoans
+    + searchItem()
+    + BorrowItem(vector<LoanableItem>&, string)
+    + ReturnItem(vector<LoanableItem>&, string)
+}
+
+class Student {
+    + static int DefaultMaxActiveLoans
+}
+
+class Professor {
+    + static int DefaultMaxActiveLoans
+    + RequestRestrictedAccess()
+}
+
+class Status {
+    <<enumeration>>
+    BORROWED
+    AVAILABLE
+    UNAVAILABLE
+}
+
+class VisitStatus {
+    <<enumeration>>
+    SCHEDULED
+    AVAILABLE
+    UNAVAILABLE
+}
+
+class Horarios {
+    <<enumeration>>
+    M56
+    T34
+    N12
+}
+
+%% HERANÇAS
+Item <|-- PublicItem
+PublicItem <|-- LoanableItem
+PublicItem <|-- ExhibitionItem
+Item <|-- RestrictedItem
+
+Person <|.. AcademicMember
 AcademicMember <|-- Student
 AcademicMember <|-- Professor
 
-
-%%==========================
-%% PESQUISA
-%%==========================
-
-class Research{
-    -title
-    -description
-    -members : vector~AcademicMember~
-    +publish()
-    +reserveItem()
-    +scheduleRestrictedConsultation()
-}
-
-Research "1" *-- "1..*" AcademicMember : researchers
-
-
-%%==========================
-%% ITENS
-%%==========================
-
-class Item{
-    +id
-    +title
-}
-
-class PublicItem
-
-class RestrictedItem
-
-class LoanableItem{
-    +borrow()
-    +returnItem()
-    +reserve()
-}
-
-class ExhibitionItem{
-    +view()
-}
-
-Item <|-- PublicItem
-Item <|-- RestrictedItem
-
-PublicItem <|-- LoanableItem
-PublicItem <|-- ExhibitionItem
+%% RELAÇÕES
+RestrictedItem *-- Visit : agenda
+AcademicMember --> LoanableItem : borrow/return
+Visit --> AcademicMember : participants
