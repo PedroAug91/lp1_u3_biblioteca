@@ -1,0 +1,9 @@
+add_library(database
+    academic_member_db.cpp
+    professor_db.cpp
+    student_db.cpp
+    public_item_db.cpp
+    loanable_item_db.cpp
+    restricted_item_db.cpp
+    exhibition_item_db.cpp
+)
