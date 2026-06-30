@@ -1,56 +1,65 @@
 classDiagram
 direction LR
 
-class Status{
-    <<enumeration>>
-    BORROWED
-    AVAILABLE
-    UNAVAILABLE
+class Printable{
+    <<interface>>
+    +print()*
 }
 
-class Item{
+class Archivable{
+    <<interface>>
+    +create(Person*)*
+    +read(string)*
+    +update(string)*
+    +remove(string)*
+}
+
+class Person{
     <<abstract>>
-    -Status status
-    +uint32_t id
+    +searchItem()*
+}
+
+Person --|> Printable
+Person --|> Archivable
+
+class Visitor{
     +string name
-    +accessItem()*
-    +getStatus() Status
-    +setStatus(Status)
+    +searchItem()
     +print()
 }
 
-class PublicItem{
-    -string DisplayArea
-    +getDisplayArea() string
-    +setDisplayArea(string)
-    +accessItem()
+class AcademicMember{
+    <<abstract>>
+    +string name
+    +uint32_t matricula
+    +int maxActiveLoans
+    +int ActiveLoans
+    +searchItem()
+    +print()
 }
 
-class LoanableItem{
-    +uint32_t responsibleId
-    +time_t borrowedAt
-    +time_t dueDate
-    +isBorrowed() bool
-    +daysRemaining() int
-    +accessItem()
+class Student{
+    +DefaultMaxActiveLoans = 3
 }
 
-class ExhibitionItem{
-    +setDisplayArea(string)
-    +accessItem()
+class Professor{
+    +DefaultMaxActiveLoans = 10
+    +RequestRestrictedAccess()
 }
 
-class RestrictedItem{
-    +Visit AccessAppointments[5][3]
-    +setStatus(Status)
-    +accessItem()
-    +getAvailableAppointments()
-    +ScheduleVisit(int,int,string,uint32_t)
+class Librarian{
+    +DefaultMaxActiveLoans = 30
+    +registerUser(string,string)
+    +registerLoanableItem(string)
+    +registerRestrictedItem(string)
+    +registerExhibitionItem(string)
+    +lendItem(AcademicMember*,uint32_t)
+    +applyFine(AcademicMember*,int)
+    +print()
 }
 
-Item <|-- PublicItem
-PublicItem <|-- LoanableItem
-PublicItem <|-- ExhibitionItem
-Item <|-- RestrictedItem
-
-Item --> Status
+Person <|-- Visitor
+Person <|-- AcademicMember
+AcademicMember <|-- Student
+AcademicMember <|-- Professor
+AcademicMember <|-- Librarian
