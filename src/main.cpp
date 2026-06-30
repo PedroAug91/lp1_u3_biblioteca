@@ -8,6 +8,7 @@
 
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <string>
 #include <vector>
@@ -30,9 +31,18 @@ public:
     std::cout << "Escolha: ";
     int choice;
     std::cin >> choice;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     return choice;
   }
 };
+
+// ── helpers ─────────────────────────────────────────────────────────
+static void clearScreen() { std::cout << "\033[2J\033[1;1H"; }
+
+static void wait() {
+  std::cout << "\nPressione Enter para continuar...";
+  std::cin.get();
+}
 
 // ── role handler type ──────────────────────────────────────────────
 using RoleHandler = std::function<void(AcademicMember *user)>;
@@ -50,6 +60,7 @@ AcademicMember *pickUser(std::vector<AcademicMember *> &allUsers) {
     return nullptr;
   }
 
+  clearScreen();
   std::cout << "\n--- Selecione um usuário ---\n";
   for (size_t i = 0; i < filtered.size(); ++i)
     std::cout << (i + 1) << ". " << filtered[i]->name << " ("
@@ -98,11 +109,13 @@ static void cmdShowItems(std::vector<LoanableItem> &loanable,
 
 // ── role sessions ──────────────────────────────────────────────────
 static void studentSession(AcademicMember *user) {
-  std::cout << "\nBem-vindo, estudante " << user->name << "!\n";
+  clearScreen();
+  std::cout << "Bem-vindo, estudante " << user->name << "!\n";
 }
 
 static void professorSession(AcademicMember *user) {
-  std::cout << "\nBem-vindo, professor " << user->name << "!\n";
+  clearScreen();
+  std::cout << "Bem-vindo, professor " << user->name << "!\n";
   Professor *prof = dynamic_cast<Professor *>(user);
   if (prof)
     prof->RequestRestrictedAccess();
@@ -185,6 +198,7 @@ int main() {
 
   // ── main loop ────────────────────────────────────────────────────
   while (true) {
+    clearScreen();
     Menu loginMenu("Sistema da Biblioteca");
     for (auto &[id, entry] : registeredRoles)
       loginMenu.add(id, entry.first);
@@ -197,6 +211,7 @@ int main() {
     auto it = registeredRoles.find(roleChoice);
     if (it == registeredRoles.end()) {
       std::cout << "Opção inválida.\n";
+      wait();
       continue;
     }
 
@@ -208,6 +223,7 @@ int main() {
 
     if (!user) {
       std::cout << "Operação cancelada.\n";
+      wait();
       continue;
     }
 
@@ -215,7 +231,13 @@ int main() {
     it->second.second(user);
 
     // Shared user session menu
+    bool firstAccess = true;
     while (true) {
+      if (!firstAccess) {
+        wait();
+        clearScreen();
+      }
+      firstAccess = false;
       Menu userMenu("Menu do Usuário");
       userMenu.add(1, "Buscar item");
       userMenu.add(2, "Pegar item emprestado");
