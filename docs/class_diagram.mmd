@@ -1,77 +1,176 @@
 classDiagram
-    class LibraryRepository {
-        -List~Item~ items
-        +addItem(Item item)
-        +removeItem(Item item)
-        +updateItem(Item item)
-        +findItem(String name) Item
-        +listItems() List~Item~
-        +lendItem(Person person, Item item, int days)
-        +returnItem(Person person, Item item)
-    }
 
-    class Person {
-        <<abstract>>
-        -String name
-        -String cpf
-        -String id
-        +read(Item item)
-        +consume(Item item)
-    }
+direction LR
 
-    class Librarian {
-        +addItemToLibrary(Item item)
-    }
+%%======================
+%% ENUMS
+%%======================
 
-    class Student {
-        +int maxBorrowDays
-        +borrowItem(Item item)
-    }
+class Status{
+    <<enumeration>>
+    BORROWED
+    AVAILABLE
+    UNAVAILABLE
+}
 
-    class Researcher {
-        +int maxBorrowDays
-        +borrowItem(Item item)
-        +publishPaper(Paper paper)
-    }
+class VisitStatus{
+    <<enumeration>>
+    SCHEDULED
+    AVAILABLE
+    UNAVAILABLE
+}
 
-    class Teacher {
-        +int maxBorrowDays
-        +borrowItem(Item item)
-    }
+class Horarios{
+    <<enumeration>>
+    M56
+    T34
+    N12
+}
 
-    class Author {
-        +publishBook(Book book)
-    }
+%%======================
+%% INTERFACES
+%%======================
 
-    class Item {
-        <<abstract>>
-        -String name
-        -int amount
-        +getName() String
-        +getAmount() int
-    }
+class Printable{
+    <<interface>>
+    +print()*
+}
 
-    class Book {
-        -Author author
-        +getAuthor() Author
-    }
+class Archivable{
+    <<interface>>
+    +create(Person*)*
+    +read(string)*
+    +update(string)*
+    +remove(string)*
+}
 
-    class Paper {
-        -Researcher researcher
-        +getResearcher() Researcher
-    }
+%%======================
+%% ITEMS
+%%======================
 
-    Person <|-- Librarian
-    Person <|-- Student
-    Person <|-- Researcher
-    Person <|-- Teacher
-    Person <|-- Author
+class Item{
+    <<abstract>>
+    -Status status
+    +uint32_t id
+    +string name
+    +accessItem()*
+    +getStatus() Status
+    +setStatus(Status)
+    +print()
+}
 
-    Item <|-- Book
-    Item <|-- Paper
+class PublicItem{
+    -string DisplayArea
+    +getDisplayArea() string
+    +setDisplayArea(string)
+    +accessItem()
+}
 
-    Book "1" --> "1" Author : has
-    Paper "1" --> "1" Researcher : has
+class LoanableItem{
+    +uint32_t responsibleId
+    +accessItem()
+}
 
-    LibraryRepository "1" o-- "*" Item : manages
-    LibraryRepository ..> Person : lends to
+class ExhibitionItem{
+    +setDisplayArea(string)
+    +accessItem()
+}
+
+class RestrictedItem{
+    +Visit AccessAppointments[5][3]
+    +setStatus(Status)
+    +accessItem()
+    +getAvailableAppointments()
+    +ScheduleVisit(int, int, string, uint32_t)
+}
+
+Item <|-- PublicItem
+PublicItem <|-- LoanableItem
+PublicItem <|-- ExhibitionItem
+Item <|-- RestrictedItem
+
+Item --> Status
+RestrictedItem --> Visit
+
+%%======================
+%% VISIT
+%%======================
+
+class Visit{
+    +time_t dia
+    +Horarios horario
+    +string attendeeName
+    +uint32_t attendeeMatricula
+    +VisitStatus visitState
+    +print()
+}
+
+Visit --> Horarios
+Visit --> VisitStatus
+
+%%======================
+%% PEOPLE
+%%======================
+
+class Person{
+    <<abstract>>
+    +searchItem()*
+}
+
+Person --|> Printable
+Person --|> Archivable
+
+class Visitor{
+    +string name
+    +searchItem()
+    +print()
+}
+
+class AcademicMember{
+    <<abstract>>
+    +string name
+    +uint32_t matricula
+    +int maxActiveLoans
+    +int ActiveLoans
+    +searchItem()
+    +BorrowItem(uint32_t)
+    +ReturnItem(uint32_t)
+    +print()
+}
+
+class Student{
+    +DefaultMaxActiveLoans = 3
+}
+
+class Professor{
+    +DefaultMaxActiveLoans = 10
+    +RequestRestrictedAccess()
+}
+
+class Librarian{
+    +DefaultMaxActiveLoans = 30
+    +registerUser(string, string)
+    +registerLoanableItem(string)
+    +registerRestrictedItem(string)
+    +registerExhibitionItem(string)
+    +lendItem(AcademicMember*, uint32_t)
+    +applyFine(AcademicMember*, int)
+    +print()
+}
+
+Person <|-- Visitor
+Person <|-- AcademicMember
+AcademicMember <|-- Student
+AcademicMember <|-- Professor
+AcademicMember <|-- Librarian
+
+%%======================
+%% ASSOCIATIONS
+%%======================
+
+AcademicMember ..> LoanableItem : borrows
+Professor ..> RestrictedItem : schedules visit
+Visitor ..> Item : searches
+AcademicMember ..> Item : searches
+Librarian ..> AcademicMember : manages
+Librarian ..> Item : registers

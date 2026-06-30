@@ -4,5 +4,6 @@ add_library(item
     LoanableItem.cpp
     RestrictedItem.cpp
     ExhibitionItem.cpp
+    Visit.cpp
 )
 target_include_directories(item PUBLIC include)

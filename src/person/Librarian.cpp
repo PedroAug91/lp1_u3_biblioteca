@@ -1,6 +1,9 @@
 #include "include/Librarian.hpp"
 #include "include/Professor.hpp"
 #include "include/Student.hpp"
+#include "../item/include/ExhibitionItem.hpp"
+#include "../item/include/LoanableItem.hpp"
+#include "../item/include/RestrictedItem.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <filesystem>

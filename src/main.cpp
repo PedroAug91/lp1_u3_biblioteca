@@ -6,6 +6,7 @@
 #include "person/include/Librarian.hpp"
 #include "person/include/Professor.hpp"
 #include "person/include/Student.hpp"
+#include "person/include/Visitor.hpp"
 
 #include <cstdlib>
 #include <filesystem>
@@ -193,6 +194,7 @@ static AcademicMember *pickUser() {
 
   int choice;
   std::cin >> choice;
+  std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
   if (choice < 1 || choice > (int)filtered.size()) {
     for (auto *u : filtered) delete u;
     return nullptr;
@@ -251,16 +253,50 @@ static void cmdShowItems() {
 
 // ── role sessions ──────────────────────────────────────────────────
 static void studentSession(AcademicMember *user) {
-  clearScreen();
   std::cout << "Bem-vindo, estudante " << user->name << "!\n";
 }
 
 static void professorSession(AcademicMember *user) {
-  clearScreen();
   std::cout << "Bem-vindo, professor " << user->name << "!\n";
   Professor *prof = dynamic_cast<Professor *>(user);
-  if (prof)
-    prof->RequestRestrictedAccess();
+  if (prof) {
+    std::cout << "\nDeseja agendar uma visita a um item restrito? (s/n): ";
+    std::string resp;
+    std::getline(std::cin, resp);
+    if (resp == "s" || resp == "S")
+      prof->RequestRestrictedAccess();
+  }
+}
+
+static void visitorSession() {
+  Visitor vis("Visitante");
+  bool firstAccess = true;
+  while (true) {
+    if (!firstAccess) {
+      wait();
+      clearScreen();
+    }
+    firstAccess = false;
+    std::cout << "Bem-vindo, Visitante!\n";
+    Menu visMenu("Menu do Visitante");
+    visMenu.add(1, "Listar itens");
+    visMenu.add(0, "Sair");
+
+    int choice = visMenu.show();
+    if (!std::cin || choice == 0)
+      break;
+
+    switch (choice) {
+    case 1:
+      vis.searchItem();
+      break;
+    case 2:
+      cmdShowItems();
+      break;
+    default:
+      std::cout << "Opção inválida.\n";
+    }
+  }
 }
 
 static void librarianSession(AcademicMember *user) {
@@ -435,11 +471,17 @@ int main() {
     Menu loginMenu("Sistema da Biblioteca");
     for (auto &[id, entry] : registeredRoles)
       loginMenu.add(id, entry.first);
+    loginMenu.add(4, "Entrar como Visitante");
     loginMenu.add(0, "Sair");
 
     int roleChoice = loginMenu.show();
     if (!std::cin || roleChoice == 0)
       break;
+
+    if (roleChoice == 4) {
+      visitorSession();
+      continue;
+    }
 
     auto it = registeredRoles.find(roleChoice);
     if (it == registeredRoles.end()) {
