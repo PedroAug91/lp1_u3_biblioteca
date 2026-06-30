@@ -13,6 +13,13 @@ enum Status {
     UNAVAILABLE
 };
 
+enum VisitStatus {
+    SCHEDULEDv,
+    AVAILABLEv,
+    UNAVAILABLEv
+};
+
+
 int maxActiveLoansProfessor = 60;
 int maxActiveLoansStudent = 3;
 
@@ -27,7 +34,6 @@ enum Horarios{
 
 
 
-///////////////////////CLASSES ITEMS ///////////////////////////////////////////////
 
 class Item { // Classe abstrata 
 private:
@@ -62,8 +68,6 @@ public:
 
 };
 
-
-
 class PublicItem : public Item{
     private: 
        string DisplayArea; // Código que indica local de exposição  do livro
@@ -83,7 +87,7 @@ class PublicItem : public Item{
         cout << "nome: " << name<< "\n";
         cout << "código de identificação: " << id<< "\n";
         cout<< "O item pode ser visto livremente em" << getDisplayArea()<<"\n";
-        cout << "ESTE ITEM É : Lorem Ipsum is simply dummy text of the printing and typesetting\name industry. Lorem Ipsum has been the industry's standard dummy text e\nver since 1966, when designers at Letraset and James Mosley, t\nhe librarian ";
+        cout << "ESTE ITEM É : Lorem Ipsum is simply dummy text of the printing and typesetting\n ame industry. Lorem Ipsum has been the industry's standard dummy text e\nver since 1966, when designers at Letraset and James Mosley, t\nhe librarian ";
         cout << "\n\n";
 }
     PublicItem( string n, Status s, string i, string Da= "depósito01" ) : Item( n,  s,  i){
@@ -131,13 +135,28 @@ class ExhibitionItem : public PublicItem{
     
 };
 
-
-//////////////////////////////////CLASSES PERSON ///////////////////////////////////
-
 class Person { // interface
 public:
 
-    virtual void searchItem() = 0;
+    virtual void searchItem(vector<Item*>& ItemList) = 0;
+};
+
+
+class Visitor : public Person{
+    public:
+    string name;
+    
+    void searchItem(vector<Item*>& ItemList) {
+        cout<<"\nlistando todos os itens da biblioteca: \n\n";
+        for(int c = 0  ; c < ItemList.size(); c++){
+            cout<< "--> "<< ItemList[c]->name<< "\n";
+        }
+        cout<<"\n\n";
+    }
+    
+    Visitor( string n  ){
+        name = n;
+    }
 };
 
 class AcademicMember :public Person{// classe abstrata
@@ -147,11 +166,15 @@ public:
     int maxActiveLoans;
     int ActiveLoans;
 
-    void searchItem() override{
-        cout <<"procurando items\n\n";
+    void searchItem(vector<Item*>& ItemList) {
+        cout<<"\nlistando todos os itens da biblioteca: \n\n";
+        for(int c = 0  ; c < ItemList.size(); c++){
+            cout<< "--> "<< ItemList[c]->name<< "\n";
+        }
+        cout<<"\n\n";
     }
     
-void BorrowItem(vector<LoanableItem>& loanableList, string itemId)  {
+virtual void BorrowItem(vector<LoanableItem>& loanableList, string itemId)  {
 
     for (int i = 0; i < loanableList.size(); i++) {
 
@@ -185,7 +208,7 @@ void BorrowItem(vector<LoanableItem>& loanableList, string itemId)  {
     cout << "Item não encontrado." << endl;
 }
 
-void ReturnItem(vector<LoanableItem>& loanableList, string itemId) {
+virtual void ReturnItem(vector<LoanableItem>& loanableList, string itemId) {
 
     for (int c = 0; c < loanableList.size(); c++) {
 
@@ -243,44 +266,144 @@ class Student : public AcademicMember{
         }
 };
 
-
-class Visit{
+class Visit final{
+    public:
     time_t dia ; 
     Horarios horario;
-    AcademicMember* participantes[5];
+    AcademicMember* Attendee;
+    VisitStatus VisitState;
 };
 
-class RestrictedItem final :public Item{ //final para evitar que uma classe filha mude os métodos que restringem o acesso 
-    public: 
-    
+class RestrictedItem final : public Item {
+public:
+
+    Visit AccessAppointments[5][3]; // 4 dias, 3 horários
+
     void setStatus(Status s) override {
         cout << "O status de um RestrictedItem não pode ser alterado.\n";
     }
-    
+
     void accessItem() override {
         cout << name << "\n";
         cout << "Esse item não está disponível ao acesso do público, agende uma consulta particular\n";
     }
-    
-    Visit   AccessAppointments[4][2] ; // Para os 5 dias seguintes, para 3 horários em cada um desses dias 
-    
-    
-    
-    void RestrictedAccess(){ // algo para horários disponíveis e selecionar um bibliotecário como curador
-        cout<<"algum texto de informações restritas";
+
+    void printHorario(Horarios h) {
+        switch (h) {
+            case M56: cout << "09:00 - 11:00"; break;
+            case T34: cout << "14:00 - 16:00"; break;
+            case N12: cout << "17:00 - 19:00"; break;
+        }
     }
-    
-    RestrictedItem(string n, string i): Item(n, UNAVAILABLE, i){}
+
+    void getAvailableAppointments() {
+        cout << "ESSES SÃO OS HORÁRIOS DISPONÍVEIS\n";
+
+        for (int d = 0; d < 5; d++) {
+            for (int h = 0; h < 3; h++) {
+
+                if (AccessAppointments[d][h].VisitState == AVAILABLEv) {
+
+                    time_t t = AccessAppointments[d][h].dia;
+                    tm* data = localtime(&t);
+
+                    cout << "Dia: " << data->tm_mday << "/"
+                         << data->tm_mon + 1 << "/"
+                         << data->tm_year + 1900 << "\n";
+
+                    printHorario(AccessAppointments[d][h].horario);
+                    cout << "\n\n";
+                }
+            }
+        }
+    }
+
+    void ScheduleVisit(int D, int P, string Pname, string Pmatricula ){
+        time_t base = time(nullptr);
+        if(AccessAppointments[D][P].VisitState == AVAILABLEv){
+            
+        
+        AccessAppointments[D][P].VisitState = SCHEDULEDv; 
+        cout << "\n-----------------------------------------------  ";
+        cout << "\n\n COMPROVANTE DE AGENDAMENTO:\n\n";
+        cout << "Acesso ao item:"<< name << "(" << id << ")\n";
+        cout << "Professor: " << Pname << "(" << Pmatricula << ")\n";
+        cout << "Horário: ";
+        printHorario(AccessAppointments[D][P].horario);
+        cout<<" \n Data: ";
+        tm* data = localtime(&AccessAppointments[D][P].dia);
+        cout << data->tm_mday << "/"
+        << data->tm_mon + 1 << "/"
+        << data->tm_year + 1900 << "\n";
+        cout << "\n-----------------------------------------------  ";
+        }else{
+            cout << "Horário não disponível, tente agendar em outro";
+        }
+    }
+
+    RestrictedItem(string n, string i) : Item(n, UNAVAILABLE, i) {
+
+        time_t base = time(nullptr);
+
+        for (int d = 0; d < 5; d++) {
+            for (int h = 0; h < 3; h++) { 
+
+                AccessAppointments[d][h].VisitState = AVAILABLEv;
+                AccessAppointments[d][h].dia = base + d * 24 * 60 * 60;
+                AccessAppointments[d][h].horario = (Horarios)h;
+            }
+        }
+    }
 };
+
+
+
 
 class Professor : public AcademicMember{
     public:
    static const int DefaultMaxActiveLoans = 10;
    
-    void RequestRestrictedAccess(){
-        cout<< "\n\nprimeiro mostra ao professor a tabela de horários disponíveis, depois o professor escolhe o horário.\n";
-        cout<< "depois opcionalmente o professor pode inserir até 5 outros objetos academic member para participarem da visita\n";
-        cout<< "Depois é emitido comprovante de agendamento (basicamente imprimir o struct)\n\n";
+    void RequestRestrictedAccess(vector<RestrictedItem>& restrictedList){
+        string IdItemRestrito;
+        
+        
+        cout<< "insira o id do item restrito que deseja acessar ";
+        cin >> IdItemRestrito;
+        
+        
+        for(int c = 0 ; c < restrictedList.size(); c++){
+            if(IdItemRestrito ==restrictedList[c].id ){
+                cout<< "NOME DO ITEM: " << restrictedList[c].name<< "\n\n";
+                restrictedList[c].getAvailableAppointments(); // Método que mostra os horários disponíveis para visitar 
+                
+                for (int d = 0; d < 5; d++) {
+                    cout << "digite "<< d<<   " para";
+                    time_t t = time(nullptr) + d * 24 * 60 * 60;
+        
+                    tm *data = localtime(&t);
+        
+                    cout << data->tm_mday << "/"
+                     << data->tm_mon + 1 << "/"
+                     << data->tm_year + 1900 << endl;
+                }
+                
+            int day; 
+            int period;
+            cin>> day;
+            cout << "digite 0 para 09:00 - 11:00 \n digite 1 para 14:00 -  16:00 \n digite 2 para 17:00 - 19:00 \n";
+            cin>>  period;
+                    
+            restrictedList[c].ScheduleVisit(day, period, this->name, this->matricula);
+                    
+                
+               break;
+            }
+        }
+    
+
+
+        
+        
     }
 
 
@@ -293,9 +416,9 @@ class Professor : public AcademicMember{
 
 
 
-
-
 int main(){
+
+    cout << "START\n";
     
 ////////////////////////VETORES DE OBJETOS DE TESTE ////////////////////////////////
 
@@ -347,7 +470,30 @@ AcademicUsers.push_back(new Student("Carlos", "011"));
 AcademicUsers.push_back(new Professor("Carlos", "012"));
 AcademicUsers.push_back(new Professor("Mariana", "013"));
 AcademicUsers.push_back(new Professor("Roberto", "014"));
-   
+
+vector<Visitor> VisitorList;
+
+VisitorList.push_back(Visitor("Lucas"));
+VisitorList.push_back(Visitor("Marina"));
+VisitorList.push_back(Visitor("Pedro"));
+
+
+
+vector<Item*> ItemList; ////////////////////////COMBINANDO TODOS OS ITENS EM UM UNICO VETOR
+
+for (int i = 0; i < LoanableList.size(); i++) {
+    ItemList.push_back(&LoanableList[i]);
+}
+for (int i = 0; i < restrictedList.size(); i++) {
+    ItemList.push_back(&restrictedList[i]);
+}
+for (int i = 0; i < exhibitionList.size(); i++) {
+    ItemList.push_back(&exhibitionList[i]);
+}
+
+
+
+
    
    
    
@@ -367,6 +513,21 @@ AcademicUsers[12]->BorrowItem(LoanableList, "007"); //Limite de emprestimo por p
 AcademicUsers[12]->BorrowItem(LoanableList, "006"); 
 AcademicUsers[12]->BorrowItem(LoanableList, "008"); 
 AcademicUsers[12]->BorrowItem(LoanableList, "009"); 
+
+
+VisitorList[0].searchItem(ItemList); // O acesso dos visitantes a pesquisar os livros se limita ao nome
+
+AcademicUsers[1]->searchItem(ItemList); // Maior nível de acesso a informação
+
+Professor* professor = dynamic_cast<Professor*>(AcademicUsers[12]);
+
+if(professor != nullptr) {
+    professor->RequestRestrictedAccess(restrictedList);
+}else{
+    cout << "Esse usuário não é um professor.\n";
+}
+
+
 
     return 0;
 }
