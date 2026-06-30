@@ -1,0 +1,178 @@
+classDiagram
+
+direction LR
+
+%%======================
+%% ENUMS
+%%======================
+
+class Status{
+    <<enumeration>>
+    BORROWED
+    AVAILABLE
+    UNAVAILABLE
+}
+
+class VisitStatus{
+    <<enumeration>>
+    SCHEDULED
+    AVAILABLE
+    UNAVAILABLE
+}
+
+class Horarios{
+    <<enumeration>>
+    M56
+    T34
+    N12
+}
+
+%%======================
+%% INTERFACES
+%%======================
+
+class Printable{
+    <<interface>>
+    +print()*
+}
+
+class Archivable{
+    <<interface>>
+    +create(Person*)*
+    +read(string)*
+    +update(string)*
+    +remove(string)*
+}
+
+%%======================
+%% ITEMS
+%%======================
+
+class Item{
+    <<abstract>>
+    -Status status
+    +uint32_t id
+    +string name
+    +accessItem()*
+    +getStatus() Status
+    +setStatus(Status)
+    +print()
+}
+
+class PublicItem{
+    -string DisplayArea
+    +getDisplayArea() string
+    +setDisplayArea(string)
+    +accessItem()
+}
+
+class LoanableItem{
+    +uint32_t responsibleId
+    +time_t borrowedAt
+    +time_t dueDate
+    +isBorrowed() bool
+    +daysRemaining() int
+    +accessItem()
+}
+
+class ExhibitionItem{
+    +setDisplayArea(string)
+    +accessItem()
+}
+
+class RestrictedItem{
+    +Visit AccessAppointments[5][3]
+    +setStatus(Status)
+    +accessItem()
+    +getAvailableAppointments()
+    +ScheduleVisit(int, int, string, uint32_t)
+}
+
+Item <|-- PublicItem
+PublicItem <|-- LoanableItem
+PublicItem <|-- ExhibitionItem
+Item <|-- RestrictedItem
+
+Item --> Status
+RestrictedItem --> Visit
+
+%%======================
+%% VISIT
+%%======================
+
+class Visit{
+    +time_t dia
+    +Horarios horario
+    +string attendeeName
+    +uint32_t attendeeMatricula
+    +VisitStatus visitState
+    +print()
+}
+
+Visit --> Horarios
+Visit --> VisitStatus
+
+%%======================
+%% PEOPLE
+%%======================
+
+class Person{
+    <<abstract>>
+    +searchItem()*
+}
+
+Person --|> Printable
+Person --|> Archivable
+
+class Visitor{
+    +string name
+    +searchItem()
+    +print()
+}
+
+class AcademicMember{
+    <<abstract>>
+    +string name
+    +uint32_t matricula
+    +int maxActiveLoans
+    +int ActiveLoans
+    +searchItem()
+    +print()
+}
+
+class Student{
+    +DefaultMaxActiveLoans = 3
+}
+
+class Professor{
+    +DefaultMaxActiveLoans = 10
+    +RequestRestrictedAccess()
+}
+
+class Librarian{
+    +DefaultMaxActiveLoans = 30
+    +registerUser(string, string)
+    +registerLoanableItem(string)
+    +registerRestrictedItem(string)
+    +registerExhibitionItem(string)
+    +lendItem(AcademicMember*, uint32_t)
+    +applyFine(AcademicMember*, int)
+    +print()
+}
+
+Person <|-- Visitor
+Person <|-- AcademicMember
+AcademicMember <|-- Student
+AcademicMember <|-- Professor
+AcademicMember <|-- Librarian
+
+%%======================
+%% ASSOCIATIONS
+%%======================
+
+AcademicMember ..> LoanableItem : borrows
+Professor ..> RestrictedItem : schedules visit
+Visitor ..> Item : searches
+AcademicMember ..> Item : searches
+Librarian ..> AcademicMember : manages
+Librarian ..> Item : registers

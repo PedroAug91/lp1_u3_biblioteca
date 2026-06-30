@@ -1,5 +1,21 @@
+#include "item/include/ExhibitionItem.hpp"
+#include "item/include/LoanableItem.hpp"
+#include "item/include/RestrictedItem.hpp"
+#include "item/include/Status.hpp"
+#include "person/include/AcademicMember.hpp"
+#include "person/include/Librarian.hpp"
+#include "person/include/Professor.hpp"
+#include "person/include/Student.hpp"
+#include "person/include/Visitor.hpp"
+
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <functional>
 #include <iostream>
-using namespace std; 
+#include <limits>
+#include <map>
+#include <string>
 #include <vector>
 #include <ctime>
 
@@ -7,527 +23,545 @@ time_t agora = time(nullptr); // Determina o tempo atual
 //  time_t agora = time(nullptr) + i * 24 * 60 * 60 // Serve para testar avançando o tempo alguns dias 
 // Necessário para implementar o prazo dos empréstimos
 
-enum Status {
-    BORROWED,
-    AVAILABLE,
-    UNAVAILABLE
-};
+namespace fs = std::filesystem;
 
-enum VisitStatus {
-    SCHEDULEDv,
-    AVAILABLEv,
-    UNAVAILABLEv
-};
+class Menu {
+  std::string title_;
+  std::vector<std::pair<int, std::string>> options_;
 
-
-int maxActiveLoansProfessor = 60;
-int maxActiveLoansStudent = 3;
-
-
-enum Horarios{
-    M56,
-    T34,
-    N12
-};
-
-
-
-
-
-
-class Item { // Classe abstrata 
-private:
-    Status status;
 public:
-    string id;
-    string name;
+  Menu(std::string title) : title_(std::move(title)) {}
 
-    
-    virtual void accessItem() = 0;    
-    
+  void add(int id, std::string label) {
+    options_.push_back({id, std::move(label)});
+  }
 
-    Status getStatus() const {
-        return status;
-    }
-
-    virtual void setStatus(Status s) {
-        status = s;
-    }
-
-    Item(string n, Status s, string i) {
-        name = n;
-        id = i;
-        setStatus(s);
-        
-    }
-    
-
-    virtual ~Item() {};
-    
-    
-
+  int show() const {
+    std::cout << "\n=== " << title_ << " ===\n";
+    for (auto &opt : options_)
+      std::cout << opt.first << ". " << opt.second << "\n";
+    std::cout << "Escolha: ";
+    int choice;
+    std::cin >> choice;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    return choice;
+  }
 };
 
-class PublicItem : public Item{
-    private: 
-       string DisplayArea; // Código que indica local de exposição  do livro
-    public:
-    string getDisplayArea() const {
-        return DisplayArea;
-    }
+// ── helpers ─────────────────────────────────────────────────────────
+static void clearScreen() { std::cout << "\033[2J\033[1;1H"; }
 
-    virtual void setDisplayArea(string s) {
-        DisplayArea = s;
-    }
-    
-    
-    
-    void accessItem ()  override{
-        cout << "DESCRIÇÃO DO ITEM: \n" ;
-        cout << "nome: " << name<< "\n";
-        cout << "código de identificação: " << id<< "\n";
-        cout<< "O item pode ser visto livremente em" << getDisplayArea()<<"\n";
-        cout << "ESTE ITEM É : Lorem Ipsum is simply dummy text of the printing and typesetting\n ame industry. Lorem Ipsum has been the industry's standard dummy text e\nver since 1966, when designers at Letraset and James Mosley, t\nhe librarian ";
-        cout << "\n\n";
-}
-    PublicItem( string n, Status s, string i, string Da= "depósito01" ) : Item( n,  s,  i){
-        setDisplayArea(Da);
-    }
-};
-
-class LoanableItem : public PublicItem{
-    public:
-    string responsibleId;
-    
-        void accessItem ()  override{
-        cout << "DESCRIÇÃO DO ITEM: \n" ;
-        cout << "nome: " << name<< "\n";
-        cout << "código de identificação: " << id<< "\n";
-        cout<< "O item pode ser visto livremente em" << getDisplayArea()<<"\n";
-        cout << "ESTE ITEM É : Lorem Ipsum is simply dummy text of the printing and typesetting\name industry. Lorem Ipsum has been the industry's standard dummy text e\nver since 1966, when designers at Letraset and James Mosley, t\nhe librarian ";
-        cout << "\n\n";
-    }
- 
-    LoanableItem( string n, Status s,  string i, string Da ="depósito01"  , string rid = "0") : PublicItem( n, s, i, Da) {
-  
-        responsibleId = rid;
-    }
-};
-
-class ExhibitionItem : public PublicItem{
-    public:
-     void setDisplayArea(string s) override {
-        cout << "Essa exposiçao não pode ser retirada de seu local:"<< getDisplayArea();
-    }
-    
-     void accessItem ()  override{
-        cout << "DESCRIÇÃO DO ITEM: \n" ;
-        cout << "nome: " << name<< "\n";
-        cout << "código de identificação: " << id<< "\n";
-        cout<< "O item pode ser visto livremente em" << getDisplayArea()<<"\n";
-        cout << "ESTE ITEM É : informações sobre a exposiçãoinformações sobre a exposição\ninformações sobre a exposiçãotandard dummy text e\nver since 1informações sobre a exposiçãoet and James Mosley, t\nhe librarian ";
-        cout << "\n\n";
-    }
-    
-        ExhibitionItem( string n, Status s,  string i, string Da ="Área de exposição01"  ) : PublicItem( n, s, i, Da) {
-  
-    }
-    
-};
-
-class Person { // interface
-public:
-
-    virtual void searchItem(vector<Item*>& ItemList) = 0;
-};
-
-
-class Visitor : public Person{
-    public:
-    string name;
-    
-    void searchItem(vector<Item*>& ItemList) {
-        cout<<"\nlistando todos os itens da biblioteca: \n\n";
-        for(int c = 0  ; c < ItemList.size(); c++){
-            cout<< "--> "<< ItemList[c]->name<< "\n";
-        }
-        cout<<"\n\n";
-    }
-    
-    Visitor( string n  ){
-        name = n;
-    }
-};
-
-class AcademicMember :public Person{// classe abstrata
-public:
-    string name;
-    string matricula; 
-    int maxActiveLoans;
-    int ActiveLoans;
-
-    void searchItem(vector<Item*>& ItemList) {
-        cout<<"\nlistando todos os itens da biblioteca: \n\n";
-        for(int c = 0  ; c < ItemList.size(); c++){
-            cout<< "--> "<< ItemList[c]->name<< "\n";
-        }
-        cout<<"\n\n";
-    }
-    
-virtual void BorrowItem(vector<LoanableItem>& loanableList, string itemId)  {
-
-    for (int i = 0; i < loanableList.size(); i++) {
-
-        if (loanableList[i].id == itemId) {
-
-            if (loanableList[i].getStatus() == AVAILABLE) {
-                if(ActiveLoans< maxActiveLoans){
-                    loanableList[i].setStatus(BORROWED);
-                    loanableList[i].responsibleId = matricula;
-                    loanableList[i].setDisplayArea("não está na biblioteca");
-                    ActiveLoans++;
-                cout << "Item "
-                     << loanableList[i].name
-                     << " emprestado para "
-                     << name << "que tem " <<  ActiveLoans << " empréstimo(s) ativos"<<endl;
-                     
-                }
-                else{
-                    cout << "usuário atingiu quantidade máxima de empréstimos: " << ActiveLoans <<"\n\n";
-                }
-            }
-            else {
-
-                cout << "Item indisponível." << endl;
-            }
-
-            return;
-        }
-    }
-
-    cout << "Item não encontrado." << endl;
+static void wait() {
+  std::cout << "\nPressione Enter para continuar...";
+  if (!std::cin) {
+    std::cin.clear();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+  }
+  std::cin.get();
 }
 
-virtual void ReturnItem(vector<LoanableItem>& loanableList, string itemId) {
+// ── role handler type ──────────────────────────────────────────────
+using RoleHandler = std::function<void(AcademicMember *user)>;
 
-    for (int c = 0; c < loanableList.size(); c++) {
+// ── database helpers ───────────────────────────────────────────────
 
-        if (loanableList[c].id == itemId) {
+static std::string dbDir() { return "library_db"; }
 
-            if (loanableList[c].getStatus() == BORROWED) {
+static void ensureDbDir() { fs::create_directories(dbDir()); }
 
-                if (loanableList[c].responsibleId == matricula) {
-
-                    loanableList[c].responsibleId = "0";
-                    loanableList[c].setStatus(AVAILABLE) ;
-                    loanableList[c].setDisplayArea("depósito de devoluções");
-                    ActiveLoans--;
-                    cout << "Item "
-                         << loanableList[c].name
-                         << " (" << loanableList[c].id
-                         << ") devolvido por "
-                         << name
-                         << " que tem " <<  ActiveLoans << " empréstimo(s) ativos"<<endl;
-
-                } else {
-
-                    cout << "Esse usuário não pegou esse item emprestado.\n\n";
-
-                }
-
-            } else {
-
-                cout << "O item não está emprestado.\n\n";
-
-            }
-
-            return;
-        }
+static std::vector<LoanableItem> loadAllLoanable() {
+  std::vector<LoanableItem> items;
+  if (!fs::exists(dbDir())) return items;
+  for (auto &entry : fs::directory_iterator(dbDir())) {
+    auto path = entry.path();
+    if (path.extension() == ".lnb") {
+      try {
+        uint32_t id = std::stoul(path.stem().string());
+        LoanableItem item("", Status::AVAILABLE, id);
+        if (item.read(std::to_string(id)))
+          items.push_back(std::move(item));
+      } catch (...) {}
     }
-
-    cout << "Item não encontrado.\n\n";
-}
-    
-    
-    AcademicMember( string n , string m, int maxLoans, int loans){
-        name = n;
-        matricula = m; 
-        maxActiveLoans= maxLoans;
-        ActiveLoans = loans;
-    }
-    
-};
-
-class Student : public AcademicMember{
-    public:
-    static const int DefaultMaxActiveLoans = 3;;
-          // O que um estudante pode fazer que um professor não 
-        Student(string n, string m ): AcademicMember(n, m , DefaultMaxActiveLoans , 0) {
-        }
-};
-
-class Visit final{
-    public:
-    time_t dia ; 
-    Horarios horario;
-    AcademicMember* Attendee;
-    VisitStatus VisitState;
-};
-
-class RestrictedItem final : public Item {
-public:
-
-    Visit AccessAppointments[5][3]; // 4 dias, 3 horários
-
-    void setStatus(Status s) override {
-        cout << "O status de um RestrictedItem não pode ser alterado.\n";
-    }
-
-    void accessItem() override {
-        cout << name << "\n";
-        cout << "Esse item não está disponível ao acesso do público, agende uma consulta particular\n";
-    }
-
-    void printHorario(Horarios h) {
-        switch (h) {
-            case M56: cout << "09:00 - 11:00"; break;
-            case T34: cout << "14:00 - 16:00"; break;
-            case N12: cout << "17:00 - 19:00"; break;
-        }
-    }
-
-    void getAvailableAppointments() {
-        cout << "ESSES SÃO OS HORÁRIOS DISPONÍVEIS\n";
-
-        for (int d = 0; d < 5; d++) {
-            for (int h = 0; h < 3; h++) {
-
-                if (AccessAppointments[d][h].VisitState == AVAILABLEv) {
-
-                    time_t t = AccessAppointments[d][h].dia;
-                    tm* data = localtime(&t);
-
-                    cout << "Dia: " << data->tm_mday << "/"
-                         << data->tm_mon + 1 << "/"
-                         << data->tm_year + 1900 << "\n";
-
-                    printHorario(AccessAppointments[d][h].horario);
-                    cout << "\n\n";
-                }
-            }
-        }
-    }
-
-    void ScheduleVisit(int D, int P, string Pname, string Pmatricula ){
-        time_t base = time(nullptr);
-        if(AccessAppointments[D][P].VisitState == AVAILABLEv){
-            
-        
-        AccessAppointments[D][P].VisitState = SCHEDULEDv; 
-        cout << "\n-----------------------------------------------  ";
-        cout << "\n\n COMPROVANTE DE AGENDAMENTO:\n\n";
-        cout << "Acesso ao item:"<< name << "(" << id << ")\n";
-        cout << "Professor: " << Pname << "(" << Pmatricula << ")\n";
-        cout << "Horário: ";
-        printHorario(AccessAppointments[D][P].horario);
-        cout<<" \n Data: ";
-        tm* data = localtime(&AccessAppointments[D][P].dia);
-        cout << data->tm_mday << "/"
-        << data->tm_mon + 1 << "/"
-        << data->tm_year + 1900 << "\n";
-        cout << "\n-----------------------------------------------  ";
-        }else{
-            cout << "Horário não disponível, tente agendar em outro";
-        }
-    }
-
-    RestrictedItem(string n, string i) : Item(n, UNAVAILABLE, i) {
-
-        time_t base = time(nullptr);
-
-        for (int d = 0; d < 5; d++) {
-            for (int h = 0; h < 3; h++) { 
-
-                AccessAppointments[d][h].VisitState = AVAILABLEv;
-                AccessAppointments[d][h].dia = base + d * 24 * 60 * 60;
-                AccessAppointments[d][h].horario = (Horarios)h;
-            }
-        }
-    }
-};
-
-
-
-
-class Professor : public AcademicMember{
-    public:
-   static const int DefaultMaxActiveLoans = 10;
-   
-    void RequestRestrictedAccess(vector<RestrictedItem>& restrictedList){
-        string IdItemRestrito;
-        
-        
-        cout<< "insira o id do item restrito que deseja acessar ";
-        cin >> IdItemRestrito;
-        
-        
-        for(int c = 0 ; c < restrictedList.size(); c++){
-            if(IdItemRestrito ==restrictedList[c].id ){
-                cout<< "NOME DO ITEM: " << restrictedList[c].name<< "\n\n";
-                restrictedList[c].getAvailableAppointments(); // Método que mostra os horários disponíveis para visitar 
-                
-                for (int d = 0; d < 5; d++) {
-                    cout << "digite "<< d<<   " para";
-                    time_t t = time(nullptr) + d * 24 * 60 * 60;
-        
-                    tm *data = localtime(&t);
-        
-                    cout << data->tm_mday << "/"
-                     << data->tm_mon + 1 << "/"
-                     << data->tm_year + 1900 << endl;
-                }
-                
-            int day; 
-            int period;
-            cin>> day;
-            cout << "digite 0 para 09:00 - 11:00 \n digite 1 para 14:00 -  16:00 \n digite 2 para 17:00 - 19:00 \n";
-            cin>>  period;
-                    
-            restrictedList[c].ScheduleVisit(day, period, this->name, this->matricula);
-                    
-                
-               break;
-            }
-        }
-    
-
-
-        
-        
-    }
-
-
-    Professor(string n, string m ): AcademicMember(n, m,  DefaultMaxActiveLoans, 0)  {
-    }
-    
-    
-};
-
-
-
-
-int main(){
-
-    cout << "START\n";
-    
-////////////////////////VETORES DE OBJETOS DE TESTE ////////////////////////////////
-
-vector<LoanableItem> LoanableList;
-
-LoanableList.push_back(LoanableItem("Dom Casmurro", UNAVAILABLE , "002"));
-LoanableList.push_back(LoanableItem("Clean Code", UNAVAILABLE , "003"));
-LoanableList.push_back(LoanableItem("Animal Farm", UNAVAILABLE , "004"));
-LoanableList.push_back(LoanableItem("1984", UNAVAILABLE , "005"));
-LoanableList.push_back(LoanableItem("Dom Casmurro", AVAILABLE , "006"));
-LoanableList.push_back(LoanableItem("Clean Code", AVAILABLE , "007"));
-LoanableList.push_back(LoanableItem("Animal Farm", AVAILABLE , "008"));
-LoanableList.push_back(LoanableItem("1984", AVAILABLE , "009"));
-LoanableList.push_back(LoanableItem("Dom Casmurro", AVAILABLE , "010"));
-LoanableList.push_back(LoanableItem("Clean Code", AVAILABLE , "011"));
-LoanableList.push_back(LoanableItem("Animal Farm", AVAILABLE , "012"));
-LoanableList.push_back(LoanableItem("1984", AVAILABLE , "013"));
-
-vector<RestrictedItem> restrictedList;
-
-restrictedList.push_back(RestrictedItem("Enciclopédia Britânica", "R001"));
-restrictedList.push_back(RestrictedItem("Atlas Mundial", "R002"));
-restrictedList.push_back(RestrictedItem("Dicionário Oxford", "R003"));
-restrictedList.push_back(RestrictedItem("Manuscritos Históricos", "R004"));
-restrictedList.push_back(RestrictedItem("Coleção de Mapas Antigos", "R005"));
-
-vector<ExhibitionItem> exhibitionList;
-
-exhibitionList.push_back(ExhibitionItem("Máscara Funerária Egípcia", AVAILABLE, "E001", "Sala Egito Antigo"));
-exhibitionList.push_back(ExhibitionItem("Escultura Grega Clássica", AVAILABLE, "E002", "Galeria Grécia"));
-exhibitionList.push_back(ExhibitionItem("Armadura Medieval", AVAILABLE, "E003", "Sala Idade Média"));
-exhibitionList.push_back(ExhibitionItem("Pintura Renacentista", AVAILABLE, "E004", "Galeria Renascimento"));
-exhibitionList.push_back(ExhibitionItem("Fóssil de Dinossauro", AVAILABLE, "E005", "Sala de Paleontologia"));
-
-
-    
-vector<AcademicMember*> AcademicUsers; //Mesmo vector para alunos e professores
-
-AcademicUsers.push_back(new Student("Ana", "002"));
-AcademicUsers.push_back(new Student("João", "003"));
-AcademicUsers.push_back(new Student("gustavo", "004"));
-AcademicUsers.push_back(new Student("João", "005"));
-AcademicUsers.push_back(new Student("Ana", "006"));
-AcademicUsers.push_back(new Student("Carlos", "007"));
-AcademicUsers.push_back(new Professor("gustavo", "008"));
-AcademicUsers.push_back(new Professor("João", "009"));
-AcademicUsers.push_back(new Student("Ana", "010"));
-AcademicUsers.push_back(new Student("Carlos", "011"));
-AcademicUsers.push_back(new Professor("Carlos", "012"));
-AcademicUsers.push_back(new Professor("Mariana", "013"));
-AcademicUsers.push_back(new Professor("Roberto", "014"));
-
-vector<Visitor> VisitorList;
-
-VisitorList.push_back(Visitor("Lucas"));
-VisitorList.push_back(Visitor("Marina"));
-VisitorList.push_back(Visitor("Pedro"));
-
-
-
-vector<Item*> ItemList; ////////////////////////COMBINANDO TODOS OS ITENS EM UM UNICO VETOR
-
-for (int i = 0; i < LoanableList.size(); i++) {
-    ItemList.push_back(&LoanableList[i]);
-}
-for (int i = 0; i < restrictedList.size(); i++) {
-    ItemList.push_back(&restrictedList[i]);
-}
-for (int i = 0; i < exhibitionList.size(); i++) {
-    ItemList.push_back(&exhibitionList[i]);
+  }
+  return items;
 }
 
-
-
-
-   
-   
-   
-   ///////////////////////////////////////  AÇÕES DE TESTE /////////////////////////////////////////////////////
-AcademicUsers[0]->BorrowItem(LoanableList, "007"); 
-AcademicUsers[1]->BorrowItem(LoanableList, "007");  // Livro já emprestado por outra pessoa
-AcademicUsers[1]->BorrowItem(LoanableList, "009"); 
-AcademicUsers[0]->ReturnItem(LoanableList, "007");
-AcademicUsers[1]->ReturnItem(LoanableList, "009");
-
-AcademicUsers[0]->BorrowItem(LoanableList, "010"); //Limite de emprestimo por aluno
-AcademicUsers[0]->BorrowItem(LoanableList, "011"); 
-AcademicUsers[0]->BorrowItem(LoanableList, "012"); 
-AcademicUsers[0]->BorrowItem(LoanableList, "013"); 
-
-AcademicUsers[12]->BorrowItem(LoanableList, "007"); //Limite de emprestimo por professor maior que aluno
-AcademicUsers[12]->BorrowItem(LoanableList, "006"); 
-AcademicUsers[12]->BorrowItem(LoanableList, "008"); 
-AcademicUsers[12]->BorrowItem(LoanableList, "009"); 
-
-
-VisitorList[0].searchItem(ItemList); // O acesso dos visitantes a pesquisar os livros se limita ao nome
-
-AcademicUsers[1]->searchItem(ItemList); // Maior nível de acesso a informação
-
-Professor* professor = dynamic_cast<Professor*>(AcademicUsers[12]);
-
-if(professor != nullptr) {
-    professor->RequestRestrictedAccess(restrictedList);
-}else{
-    cout << "Esse usuário não é um professor.\n";
+static std::vector<RestrictedItem> loadAllRestricted() {
+  std::vector<RestrictedItem> items;
+  if (!fs::exists(dbDir())) return items;
+  for (auto &entry : fs::directory_iterator(dbDir())) {
+    auto path = entry.path();
+    if (path.extension() == ".rst") {
+      try {
+        uint32_t id = std::stoul(path.stem().string());
+        RestrictedItem item("", id);
+        if (item.read(std::to_string(id)))
+          items.push_back(std::move(item));
+      } catch (...) {}
+    }
+  }
+  return items;
 }
 
+static std::vector<ExhibitionItem> loadAllExhibition() {
+  std::vector<ExhibitionItem> items;
+  if (!fs::exists(dbDir())) return items;
+  for (auto &entry : fs::directory_iterator(dbDir())) {
+    auto path = entry.path();
+    if (path.extension() == ".exb") {
+      try {
+        uint32_t id = std::stoul(path.stem().string());
+        ExhibitionItem item("", Status::AVAILABLE, id);
+        if (item.read(std::to_string(id)))
+          items.push_back(std::move(item));
+      } catch (...) {}
+    }
+  }
+  return items;
+}
 
+static std::string readTypeFromFile(const std::string &id) {
+  std::string path = dbDir() + "/" + id + ".usr";
+  std::ifstream file(path);
+  if (!file.is_open()) return "";
+  std::string line;
+  while (std::getline(file, line)) {
+    if (line.rfind("type=", 0) == 0)
+      return line.substr(5);
+  }
+  return "";
+}
 
-    return 0;
+static std::vector<std::string> listUserIds() {
+  std::vector<std::string> ids;
+  if (!fs::exists(dbDir())) return ids;
+  for (auto &entry : fs::directory_iterator(dbDir())) {
+    auto path = entry.path();
+    if (path.extension() == ".usr")
+      ids.push_back(path.stem().string());
+  }
+  return ids;
+}
+
+// ── helper: list users of a given type and let the user pick one ───
+template <typename T>
+static AcademicMember *pickUser() {
+  auto ids = listUserIds();
+  std::vector<AcademicMember *> filtered;
+  for (auto &id : ids) {
+    std::string type = readTypeFromFile(id);
+    bool matches = false;
+    if constexpr (std::is_same_v<T, Student>)
+      matches = (type == "student");
+    else if constexpr (std::is_same_v<T, Professor>)
+      matches = (type == "professor");
+    else if constexpr (std::is_same_v<T, Librarian>)
+      matches = (type == "librarian");
+    else
+      matches = true;
+
+    if (!matches) continue;
+
+    uint32_t numId = std::stoul(id);
+    AcademicMember *u = nullptr;
+    if constexpr (std::is_same_v<T, Student>)
+      u = new Student("", numId);
+    else if constexpr (std::is_same_v<T, Professor>)
+      u = new Professor("", numId);
+    else if constexpr (std::is_same_v<T, Librarian>)
+      u = new Librarian("", numId);
+    else {
+      if (type == "student")
+        u = new Student("", numId);
+      else if (type == "professor")
+        u = new Professor("", numId);
+      else if (type == "librarian")
+        u = new Librarian("", numId);
+    }
+
+    if (u && u->read(id))
+      filtered.push_back(u);
+    else
+      delete u;
+  }
+
+  if (filtered.empty()) {
+    std::cout << "Nenhum usuário disponível.\n";
+    return nullptr;
+  }
+
+  clearScreen();
+  std::cout << "\n--- Selecione um usuário ---\n";
+  for (size_t i = 0; i < filtered.size(); ++i)
+    std::cout << (i + 1) << ". " << filtered[i]->name << " ("
+              << filtered[i]->matricula << ")\n";
+  std::cout << "0. Voltar\nEscolha: ";
+
+  int choice;
+  std::cin >> choice;
+  std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+  if (choice < 1 || choice > (int)filtered.size()) {
+    for (auto *u : filtered) delete u;
+    return nullptr;
+  }
+
+  AcademicMember *result = filtered[choice - 1];
+  for (size_t i = 0; i < filtered.size(); ++i)
+    if (i != (size_t)(choice - 1)) delete filtered[i];
+  return result;
+}
+
+// ── session helpers ────────────────────────────────────────────────
+static void cmdShowItems() {
+  auto loanable = loadAllLoanable();
+  auto restricted = loadAllRestricted();
+  auto exhibition = loadAllExhibition();
+
+  std::cout << "\n--- Itens para Empréstimo ---\n";
+  for (auto &i : loanable) {
+    std::cout << "  " << i.id << " - " << i.name << " [";
+    switch (static_cast<char>(i.getStatus())) {
+    case 'A':
+      std::cout << "Disponível";
+      break;
+    case 'U':
+      std::cout << "Indisponível";
+      break;
+    case 'B':
+      std::cout << "Emprestado";
+      break;
+    }
+    std::cout << "]\n";
+  }
+  std::cout << "\n--- Itens Restritos ---\n";
+  for (auto &i : restricted)
+    std::cout << "  " << i.id << " - " << i.name << "\n";
+  std::cout << "\n--- Itens de Exposição ---\n";
+  for (auto &i : exhibition)
+    std::cout << "  " << i.id << " - " << i.name << " [" << i.getDisplayArea()
+              << "]\n";
+}
+
+// ── role sessions ──────────────────────────────────────────────────
+static void studentSession(AcademicMember *user) {
+  std::cout << "Bem-vindo, estudante " << user->name << "!\n";
+}
+
+static void professorSession(AcademicMember *user) {
+  std::cout << "Bem-vindo, professor " << user->name << "!\n";
+  Professor *prof = dynamic_cast<Professor *>(user);
+  if (prof) {
+    std::cout << "\nDeseja agendar uma visita a um item restrito? (s/n): ";
+    std::string resp;
+    std::getline(std::cin, resp);
+    if (resp == "s" || resp == "S")
+      prof->RequestRestrictedAccess();
+  }
+}
+
+static void visitorSession() {
+  Visitor vis("Visitante");
+  bool firstAccess = true;
+  while (true) {
+    if (!firstAccess) {
+      wait();
+      clearScreen();
+    }
+    firstAccess = false;
+    std::cout << "Bem-vindo, Visitante!\n";
+    Menu visMenu("Menu do Visitante");
+    visMenu.add(1, "Listar itens");
+    visMenu.add(0, "Sair");
+
+    int choice = visMenu.show();
+    if (!std::cin || choice == 0)
+      break;
+
+    switch (choice) {
+    case 1:
+      cmdShowItems();
+      break;
+    default:
+      std::cout << "Opção inválida.\n";
+    }
+  }
+}
+
+static void librarianSession(AcademicMember *user) {
+  clearScreen();
+  std::cout << "Bem-vindo, bibliotecário " << user->name << "!\n";
+  Librarian *lib = dynamic_cast<Librarian *>(user);
+  if (!lib)
+    return;
+
+  bool firstAccess = true;
+  while (true) {
+    if (!firstAccess) {
+      wait();
+      clearScreen();
+    }
+    firstAccess = false;
+    Menu libMenu("Menu do Bibliotecário");
+    libMenu.add(1, "Registrar usuário");
+    libMenu.add(2, "Registrar item emprestável");
+    libMenu.add(3, "Registrar item restrito");
+    libMenu.add(4, "Registrar item de exposição");
+    libMenu.add(5, "Emprestar item a usuário");
+    libMenu.add(6, "Receber devolução de item");
+    libMenu.add(7, "Aplicar multa");
+    libMenu.add(8, "Listar itens");
+    libMenu.add(9, "Ver meus dados");
+    libMenu.add(0, "Sair");
+
+    int choice = libMenu.show();
+    if (!std::cin || choice == 0)
+      break;
+
+    switch (choice) {
+    case 1: {
+      std::string type, name;
+      std::cout << "Tipo (student/professor): ";
+      std::getline(std::cin, type);
+      std::cout << "Nome: ";
+      std::getline(std::cin, name);
+      lib->registerUser(type, name);
+      break;
+    }
+    case 2: {
+      std::string name;
+      std::cout << "Nome do item: ";
+      std::getline(std::cin, name);
+      lib->registerLoanableItem(name);
+      break;
+    }
+    case 3: {
+      std::string name;
+      std::cout << "Nome do item: ";
+      std::getline(std::cin, name);
+      lib->registerRestrictedItem(name);
+      break;
+    }
+    case 4: {
+      std::string name;
+      std::cout << "Nome do item: ";
+      std::getline(std::cin, name);
+      lib->registerExhibitionItem(name);
+      break;
+    }
+    case 5: {
+      AcademicMember *target = pickUser<AcademicMember>();
+      if (target) {
+        std::cout << "\n--- Itens disponíveis para empréstimo ---\n";
+        auto allItems = loadAllLoanable();
+        for (auto &i : allItems) {
+          if (i.getStatus() == Status::AVAILABLE)
+            std::cout << "  " << i.id << " - " << i.name << "\n";
+        }
+        uint32_t itemId;
+        std::cout << "ID do item: ";
+        std::cin >> itemId;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        lib->lendItem(target, itemId);
+        delete target;
+      }
+      break;
+    }
+    case 6: {
+      AcademicMember *target = pickUser<AcademicMember>();
+      if (target) {
+        std::cout << "\n--- Itens emprestados por " << target->name << " ---\n";
+        auto allItems = loadAllLoanable();
+        bool found = false;
+        for (auto &i : allItems) {
+          if (i.isBorrowed() && i.responsibleId == target->matricula) {
+            found = true;
+            std::cout << "  " << i.id << " - " << i.name << "\n";
+          }
+        }
+        if (!found)
+          std::cout << "  (nenhum item emprestado)\n";
+        uint32_t itemId;
+        std::cout << "ID do item para devolução: ";
+        std::cin >> itemId;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        lib->receiveReturn(target, itemId);
+        delete target;
+      }
+      break;
+    }
+    case 7: {
+      AcademicMember *target = pickUser<AcademicMember>();
+      if (target) {
+        int days;
+        std::cout << "Dias em atraso: ";
+        std::cin >> days;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        lib->applyFine(target, days);
+        delete target;
+      }
+      break;
+    }
+    case 8:
+      cmdShowItems();
+      break;
+    case 9:
+      lib->print();
+      break;
+    default:
+      std::cout << "Opção inválida.\n";
+    }
+  }
+}
+
+// ── registered roles (extend here to add new roles) ────────────────
+static std::map<int, std::pair<std::string, RoleHandler>> registeredRoles;
+
+static void registerRole(int id, std::string label, RoleHandler handler) {
+  registeredRoles[id] = {std::move(label), std::move(handler)};
+}
+
+static void initRoles() {
+  registerRole(1, "Login como Aluno", studentSession);
+  registerRole(2, "Login como Professor", professorSession);
+  registerRole(3, "Login como Bibliotecário", librarianSession);
+}
+
+// ── database seeding ───────────────────────────────────────────────
+static bool isDatabaseSeeded() {
+  if (!fs::exists(dbDir())) return false;
+  return fs::directory_iterator(dbDir()) != fs::directory_iterator();
+}
+
+static void seedDatabase() {
+  ensureDbDir();
+
+  LoanableItem("Dom Casmurro", Status::UNAVAILABLE, 1).create(nullptr);
+  LoanableItem("Clean Code", Status::UNAVAILABLE, 2).create(nullptr);
+  LoanableItem("Animal Farm", Status::UNAVAILABLE, 3).create(nullptr);
+  LoanableItem("1984", Status::UNAVAILABLE, 4).create(nullptr);
+  LoanableItem("Dom Casmurro", Status::AVAILABLE, 5).create(nullptr);
+  LoanableItem("Clean Code", Status::AVAILABLE, 6).create(nullptr);
+  LoanableItem("Animal Farm", Status::AVAILABLE, 7).create(nullptr);
+  LoanableItem("1984", Status::AVAILABLE, 8).create(nullptr);
+  LoanableItem("Dom Casmurro", Status::AVAILABLE, 9).create(nullptr);
+  LoanableItem("Clean Code", Status::AVAILABLE, 10).create(nullptr);
+  LoanableItem("Animal Farm", Status::AVAILABLE, 11).create(nullptr);
+  LoanableItem("1984", Status::AVAILABLE, 12).create(nullptr);
+
+  RestrictedItem("Enciclopédia Britânica", 13).create(nullptr);
+  RestrictedItem("Atlas Mundial", 14).create(nullptr);
+  RestrictedItem("Dicionário Oxford", 15).create(nullptr);
+  RestrictedItem("Manuscritos Históricos", 16).create(nullptr);
+  RestrictedItem("Coleção de Mapas Antigos", 17).create(nullptr);
+
+  ExhibitionItem("Máscara Funerária Egípcia", Status::AVAILABLE, 18, "Sala Egito Antigo").create(nullptr);
+  ExhibitionItem("Escultura Grega Clássica", Status::AVAILABLE, 19, "Galeria Grécia").create(nullptr);
+  ExhibitionItem("Armadura Medieval", Status::AVAILABLE, 20, "Sala Idade Média").create(nullptr);
+  ExhibitionItem("Pintura Renacentista", Status::AVAILABLE, 21, "Galeria Renascimento").create(nullptr);
+  ExhibitionItem("Fóssil de Dinossauro", Status::AVAILABLE, 22, "Sala de Paleontologia").create(nullptr);
+
+  auto s1 = Student("Ana", 1); s1.create(&s1);
+  auto s2 = Student("João", 2); s2.create(&s2);
+  auto s3 = Student("gustavo", 3); s3.create(&s3);
+  auto s4 = Student("João", 4); s4.create(&s4);
+  auto s5 = Student("Ana", 5); s5.create(&s5);
+  auto s6 = Student("Carlos", 6); s6.create(&s6);
+  auto p1 = Professor("gustavo", 7); p1.create(&p1);
+  auto p2 = Professor("João", 8); p2.create(&p2);
+  auto s7 = Student("Ana", 9); s7.create(&s7);
+  auto s8 = Student("Carlos", 10); s8.create(&s8);
+  auto p3 = Professor("Carlos", 11); p3.create(&p3);
+  auto p4 = Professor("Mariana", 12); p4.create(&p4);
+  auto p5 = Professor("Roberto", 13); p5.create(&p5);
+  auto l1 = Librarian("Bibliotecário", 14); l1.create(&l1);
+}
+
+// ── main ───────────────────────────────────────────────────────────
+int main() {
+  initRoles();
+
+  if (!isDatabaseSeeded())
+    seedDatabase();
+
+  // ── main loop ────────────────────────────────────────────────────
+  while (true) {
+    clearScreen();
+    Menu loginMenu("Sistema da Biblioteca");
+    for (auto &[id, entry] : registeredRoles)
+      loginMenu.add(id, entry.first);
+    loginMenu.add(4, "Entrar como Visitante");
+    loginMenu.add(0, "Sair");
+
+    int roleChoice = loginMenu.show();
+    if (!std::cin || roleChoice == 0)
+      break;
+
+    if (roleChoice == 4) {
+      visitorSession();
+      continue;
+    }
+
+    auto it = registeredRoles.find(roleChoice);
+    if (it == registeredRoles.end()) {
+      std::cout << "Opção inválida.\n";
+      wait();
+      if (!std::cin) std::cin.clear();
+      continue;
+    }
+
+    AcademicMember *user = nullptr;
+    if (roleChoice == 1)
+      user = pickUser<Student>();
+    else if (roleChoice == 2)
+      user = pickUser<Professor>();
+    else if (roleChoice == 3)
+      user = pickUser<Librarian>();
+
+    if (!user) {
+      std::cout << "Operação cancelada.\n";
+      wait();
+      if (!std::cin) std::cin.clear();
+      continue;
+    }
+
+    // Role-specific welcome
+    it->second.second(user);
+
+    // Shared user session menu (skip for librarian, which has its own menu)
+    if (roleChoice == 3) {
+      delete user;
+      continue;
+    }
+    bool firstAccess = true;
+    while (true) {
+      if (!firstAccess) {
+        wait();
+        clearScreen();
+      }
+      firstAccess = false;
+      Menu userMenu("Menu do Usuário");
+      userMenu.add(1, "Listar itens");
+      userMenu.add(2, "Ver meus dados");
+      userMenu.add(0, "Sair");
+
+      int userChoice = userMenu.show();
+      if (!std::cin || userChoice == 0)
+        break;
+
+      switch (userChoice) {
+      case 1:
+        cmdShowItems();
+        break;
+      case 2:
+        user->print();
+        break;
+      default:
+        std::cout << "Opção inválida.\n";
+      }
+    }
+
+    delete user;
+  }
+
+  return 0;
 }
