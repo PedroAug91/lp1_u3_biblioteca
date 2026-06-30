@@ -1,65 +1,17 @@
 classDiagram
 direction LR
 
-class Printable{
-    <<interface>>
-    +print()*
-}
+class AcademicMember
+class LoanableItem
+class RestrictedItem
+class Item
+class Librarian
 
-class Archivable{
-    <<interface>>
-    +create(Person*)*
-    +read(string)*
-    +update(string)*
-    +remove(string)*
-}
+AcademicMember ..> LoanableItem : borrows
+AcademicMember ..> Item : searches
+Visitor ..> Item : searches
 
-class Person{
-    <<abstract>>
-    +searchItem()*
-}
+Professor ..> RestrictedItem : schedules visit
 
-Person --|> Printable
-Person --|> Archivable
-
-class Visitor{
-    +string name
-    +searchItem()
-    +print()
-}
-
-class AcademicMember{
-    <<abstract>>
-    +string name
-    +uint32_t matricula
-    +int maxActiveLoans
-    +int ActiveLoans
-    +searchItem()
-    +print()
-}
-
-class Student{
-    +DefaultMaxActiveLoans = 3
-}
-
-class Professor{
-    +DefaultMaxActiveLoans = 10
-    +RequestRestrictedAccess()
-}
-
-class Librarian{
-    +DefaultMaxActiveLoans = 30
-    +registerUser(string,string)
-    +registerLoanableItem(string)
-    +registerRestrictedItem(string)
-    +registerExhibitionItem(string)
-    +lendItem(AcademicMember*,uint32_t)
-    +applyFine(AcademicMember*,int)
-    +print()
-}
-
-Person <|-- Visitor
-Person <|-- AcademicMember
-AcademicMember <|-- Student
-AcademicMember <|-- Professor
-AcademicMember <|-- Librarian
+Librarian ..> AcademicMember : manages
+Librarian ..> Item : registers
