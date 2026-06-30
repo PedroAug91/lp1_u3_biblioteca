@@ -1,77 +1,56 @@
 classDiagram
-    class LibraryRepository {
-        -List~Item~ items
-        +addItem(Item item)
-        +removeItem(Item item)
-        +updateItem(Item item)
-        +findItem(String name) Item
-        +listItems() List~Item~
-        +lendItem(Person person, Item item, int days)
-        +returnItem(Person person, Item item)
-    }
+direction LR
 
-    class Person {
-        <<abstract>>
-        -String name
-        -String cpf
-        -String id
-        +read(Item item)
-        +consume(Item item)
-    }
+class Status{
+    <<enumeration>>
+    BORROWED
+    AVAILABLE
+    UNAVAILABLE
+}
 
-    class Librarian {
-        +addItemToLibrary(Item item)
-    }
+class Item{
+    <<abstract>>
+    -Status status
+    +uint32_t id
+    +string name
+    +accessItem()*
+    +getStatus() Status
+    +setStatus(Status)
+    +print()
+}
 
-    class Student {
-        +int maxBorrowDays
-        +borrowItem(Item item)
-    }
+class PublicItem{
+    -string DisplayArea
+    +getDisplayArea() string
+    +setDisplayArea(string)
+    +accessItem()
+}
 
-    class Researcher {
-        +int maxBorrowDays
-        +borrowItem(Item item)
-        +publishPaper(Paper paper)
-    }
+class LoanableItem{
+    +uint32_t responsibleId
+    +time_t borrowedAt
+    +time_t dueDate
+    +isBorrowed() bool
+    +daysRemaining() int
+    +accessItem()
+}
 
-    class Teacher {
-        +int maxBorrowDays
-        +borrowItem(Item item)
-    }
+class ExhibitionItem{
+    +setDisplayArea(string)
+    +accessItem()
+}
 
-    class Author {
-        +publishBook(Book book)
-    }
+class RestrictedItem{
+    +Visit AccessAppointments[5][3]
+    +setStatus(Status)
+    +accessItem()
+    +getAvailableAppointments()
+    +ScheduleVisit(int,int,string,uint32_t)
+}
 
-    class Item {
-        <<abstract>>
-        -String name
-        -int amount
-        +getName() String
-        +getAmount() int
-    }
+Item <|-- PublicItem
+PublicItem <|-- LoanableItem
+PublicItem <|-- ExhibitionItem
+Item <|-- RestrictedItem
 
-    class Book {
-        -Author author
-        +getAuthor() Author
-    }
-
-    class Paper {
-        -Researcher researcher
-        +getResearcher() Researcher
-    }
-
-    Person <|-- Librarian
-    Person <|-- Student
-    Person <|-- Researcher
-    Person <|-- Teacher
-    Person <|-- Author
-
-    Item <|-- Book
-    Item <|-- Paper
-
-    Book "1" --> "1" Author : has
-    Paper "1" --> "1" Researcher : has
-
-    LibraryRepository "1" o-- "*" Item : manages
-    LibraryRepository ..> Person : lends to
+Item --> Status
