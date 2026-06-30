@@ -1,0 +1,139 @@
+classDiagram
+
+direction LR
+
+%%======================
+%% ENUMS
+%%======================
+
+class Status{
+    <<enumeration>>
+    BORROWED
+    AVAILABLE
+    UNAVAILABLE
+}
+
+class VisitStatus{
+    <<enumeration>>
+    SCHEDULEDv
+    AVAILABLEv
+    UNAVAILABLEv
+}
+
+class Horarios{
+    <<enumeration>>
+    M56
+    T34
+    N12
+}
+
+%%======================
+%% ITEMS
+%%======================
+
+class Item{
+    <<abstract>>
+    -Status status
+    +string id
+    +string name
+    +accessItem()*
+    +getStatus() Status
+    +setStatus(Status)
+}
+
+class PublicItem{
+    -string DisplayArea
+    +getDisplayArea() string
+    +setDisplayArea(string)
+    +accessItem()
+}
+
+class LoanableItem{
+    +string responsibleId
+    +accessItem()
+}
+
+class ExhibitionItem{
+    +setDisplayArea(string)
+    +accessItem()
+}
+
+class RestrictedItem{
+    +Visit AccessAppointments[5][3]
+    +setStatus(Status)
+    +accessItem()
+    +printHorario(Horarios)
+    +getAvailableAppointments()
+    +ScheduleVisit(int,int,string,string)
+}
+
+Item <|-- PublicItem
+PublicItem <|-- LoanableItem
+PublicItem <|-- ExhibitionItem
+Item <|-- RestrictedItem
+
+Item --> Status
+RestrictedItem --> Visit
+
+%%======================
+%% PEOPLE
+%%======================
+
+class Person{
+    <<abstract>>
+    +searchItem(vector~Item*~)*
+}
+
+class Visitor{
+    +string name
+    +searchItem(vector~Item*~)
+}
+
+class AcademicMember{
+    <<abstract>>
+    +string name
+    +string matricula
+    +int maxActiveLoans
+    +int ActiveLoans
+    +searchItem(vector~Item*~)
+    +BorrowItem(vector~LoanableItem~,string)
+    +ReturnItem(vector~LoanableItem~,string)
+}
+
+class Student{
+    +DefaultMaxActiveLoans = 3
+}
+
+class Professor{
+    +DefaultMaxActiveLoans = 10
+    +RequestRestrictedAccess(vector~RestrictedItem~)
+}
+
+Person <|-- Visitor
+Person <|-- AcademicMember
+AcademicMember <|-- Student
+AcademicMember <|-- Professor
+
+%%======================
+%% VISIT
+%%======================
+
+class Visit{
+    +time_t dia
+    +Horarios horario
+    +AcademicMember* Attendee
+    +VisitStatus VisitState
+}
+
+Visit --> Horarios
+Visit --> VisitStatus
+Visit --> AcademicMember
+
+%%======================
+%% ASSOCIATIONS
+%%======================
+
+AcademicMember ..> LoanableItem : borrows
+Professor ..> RestrictedItem : schedules visit
+Visitor ..> Item : searches
+AcademicMember ..> Item : searches
