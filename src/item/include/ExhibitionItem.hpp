@@ -18,7 +18,7 @@ public:
   bool update(std::string person_id) override;
   bool remove(std::string person_id) override;
 
-  ExhibitionItem(std::string n, Status s, std::string i,
+  ExhibitionItem(std::string n, Status s, uint32_t i,
                  std::string Da = "Área de exposição01");
 };
 

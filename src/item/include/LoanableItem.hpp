@@ -5,7 +5,7 @@
 
 class LoanableItem : public PublicItem {
 public:
-  std::string responsibleId;
+  uint32_t responsibleId;
 
   void accessItem() override;
 
@@ -16,8 +16,8 @@ public:
   bool update(std::string person_id) override;
   bool remove(std::string person_id) override;
 
-  LoanableItem(std::string n, Status s, std::string i,
-               std::string Da = "depósito01", std::string rid = "0");
+  LoanableItem(std::string n, Status s, uint32_t i,
+               std::string Da = "depósito01", uint32_t rid = 0);
 };
 
 #endif

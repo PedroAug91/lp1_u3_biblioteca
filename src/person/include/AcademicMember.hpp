@@ -3,13 +3,14 @@
 
 #include "../../item/include/LoanableItem.hpp"
 #include "Person.hpp"
+#include <cstdint>
 #include <string>
 #include <vector>
 
-class AcademicMember : public Person { // classe abstrata
+class AcademicMember : public Person {
 public:
   std::string name;
-  std::string matricula;
+  uint32_t matricula;
   int maxActiveLoans;
   int ActiveLoans;
 
@@ -22,11 +23,11 @@ public:
   bool update(std::string person_id) override;
   bool remove(std::string person_id) override;
 
-  void BorrowItem(std::vector<LoanableItem> &loanableList, std::string itemId);
+  void BorrowItem(std::vector<LoanableItem> &loanableList, uint32_t itemId);
 
-  void ReturnItem(std::vector<LoanableItem> &loanableList, std::string itemId);
+  void ReturnItem(std::vector<LoanableItem> &loanableList, uint32_t itemId);
 
-  AcademicMember(std::string n, std::string m, int maxLoans, int loans);
+  AcademicMember(std::string n, uint32_t m, int maxLoans, int loans);
 };
 
 #endif

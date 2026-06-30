@@ -26,6 +26,6 @@ void ExhibitionItem::accessItem() {
   std::cout << "\n\n";
 }
 
-ExhibitionItem::ExhibitionItem(std::string n, Status s, std::string i,
+ExhibitionItem::ExhibitionItem(std::string n, Status s, uint32_t i,
                                std::string Da)
     : PublicItem(n, s, i, Da) {}

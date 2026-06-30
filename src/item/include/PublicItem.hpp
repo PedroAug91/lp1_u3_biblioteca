@@ -20,7 +20,7 @@ public:
   bool update(std::string person_id) override;
   bool remove(std::string person_id) override;
 
-  PublicItem(std::string n, Status s, std::string i,
+  PublicItem(std::string n, Status s, uint32_t i,
              std::string Da = "depósito01");
 };
 

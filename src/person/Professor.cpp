@@ -22,5 +22,5 @@ void Professor::RequestRestrictedAccess() {
   std::cout << "Depois é emitido comprovante de agendamento \n\n";
 }
 
-Professor::Professor(std::string n, std::string m)
+Professor::Professor(std::string n, uint32_t m)
     : AcademicMember(n, m, DefaultMaxActiveLoans, 0) {}

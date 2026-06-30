@@ -13,7 +13,7 @@ public:
   bool remove(std::string person_id) override;
 
   // O que um estudante pode fazer que um professor não
-  Student(std::string n, std::string m);
+  Student(std::string n, uint32_t m);
 };
 
 #endif

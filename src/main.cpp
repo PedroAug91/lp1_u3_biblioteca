@@ -79,7 +79,7 @@ AcademicMember *pickUser(std::vector<AcademicMember *> &allUsers) {
 static void cmdBorrow(AcademicMember *user,
                       std::vector<LoanableItem> &loanable) {
   std::cout << "ID do item: ";
-  std::string id;
+  uint32_t id;
   std::cin >> id;
   user->BorrowItem(loanable, id);
 }
@@ -87,7 +87,7 @@ static void cmdBorrow(AcademicMember *user,
 static void cmdReturn(AcademicMember *user,
                       std::vector<LoanableItem> &loanable) {
   std::cout << "ID do item: ";
-  std::string id;
+  uint32_t id;
   std::cin >> id;
   user->ReturnItem(loanable, id);
 }
@@ -167,49 +167,42 @@ static void librarianSession(AcademicMember *user,
 
     switch (choice) {
     case 1: {
-      std::string type, name, mat;
+      std::string type, name;
       std::cout << "Tipo (student/professor): ";
       std::getline(std::cin, type);
       std::cout << "Nome: ";
       std::getline(std::cin, name);
-      std::cout << "Matrícula: ";
-      std::getline(std::cin, mat);
-      lib->registerUser(users, type, name, mat);
+      lib->registerUser(users, type, name);
       break;
     }
     case 2: {
-      std::string name, id;
+      std::string name;
       std::cout << "Nome do item: ";
       std::getline(std::cin, name);
-      std::cout << "ID: ";
-      std::getline(std::cin, id);
-      lib->registerLoanableItem(loanable, name, id);
+      lib->registerLoanableItem(loanable, name);
       break;
     }
     case 3: {
-      std::string name, id;
+      std::string name;
       std::cout << "Nome do item: ";
       std::getline(std::cin, name);
-      std::cout << "ID: ";
-      std::getline(std::cin, id);
-      lib->registerRestrictedItem(restricted, name, id);
+      lib->registerRestrictedItem(restricted, name);
       break;
     }
     case 4: {
-      std::string name, id;
+      std::string name;
       std::cout << "Nome do item: ";
       std::getline(std::cin, name);
-      std::cout << "ID: ";
-      std::getline(std::cin, id);
-      lib->registerExhibitionItem(exhibition, name, id);
+      lib->registerExhibitionItem(exhibition, name);
       break;
     }
     case 5: {
       AcademicMember *target = pickUser<AcademicMember>(users);
       if (target) {
-        std::string itemId;
+        uint32_t itemId;
         std::cout << "ID do item: ";
-        std::getline(std::cin, itemId);
+        std::cin >> itemId;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         lib->lendItem(target, loanable, itemId);
       }
       break;
@@ -256,60 +249,60 @@ int main() {
   // ── data initialisation ──────────────────────────────────────────
   std::vector<LoanableItem> LoanableList;
   LoanableList.push_back(
-      LoanableItem("Dom Casmurro", Status::UNAVAILABLE, "002"));
+      LoanableItem("Dom Casmurro", Status::UNAVAILABLE, 1));
   LoanableList.push_back(
-      LoanableItem("Clean Code", Status::UNAVAILABLE, "003"));
+      LoanableItem("Clean Code", Status::UNAVAILABLE, 2));
   LoanableList.push_back(
-      LoanableItem("Animal Farm", Status::UNAVAILABLE, "004"));
-  LoanableList.push_back(LoanableItem("1984", Status::UNAVAILABLE, "005"));
+      LoanableItem("Animal Farm", Status::UNAVAILABLE, 3));
+  LoanableList.push_back(LoanableItem("1984", Status::UNAVAILABLE, 4));
   LoanableList.push_back(
-      LoanableItem("Dom Casmurro", Status::AVAILABLE, "006"));
-  LoanableList.push_back(LoanableItem("Clean Code", Status::AVAILABLE, "007"));
-  LoanableList.push_back(LoanableItem("Animal Farm", Status::AVAILABLE, "008"));
-  LoanableList.push_back(LoanableItem("1984", Status::AVAILABLE, "009"));
+      LoanableItem("Dom Casmurro", Status::AVAILABLE, 5));
+  LoanableList.push_back(LoanableItem("Clean Code", Status::AVAILABLE, 6));
+  LoanableList.push_back(LoanableItem("Animal Farm", Status::AVAILABLE, 7));
+  LoanableList.push_back(LoanableItem("1984", Status::AVAILABLE, 8));
   LoanableList.push_back(
-      LoanableItem("Dom Casmurro", Status::AVAILABLE, "010"));
-  LoanableList.push_back(LoanableItem("Clean Code", Status::AVAILABLE, "011"));
-  LoanableList.push_back(LoanableItem("Animal Farm", Status::AVAILABLE, "012"));
-  LoanableList.push_back(LoanableItem("1984", Status::AVAILABLE, "013"));
+      LoanableItem("Dom Casmurro", Status::AVAILABLE, 9));
+  LoanableList.push_back(LoanableItem("Clean Code", Status::AVAILABLE, 10));
+  LoanableList.push_back(LoanableItem("Animal Farm", Status::AVAILABLE, 11));
+  LoanableList.push_back(LoanableItem("1984", Status::AVAILABLE, 12));
 
   std::vector<RestrictedItem> restrictedList;
-  restrictedList.push_back(RestrictedItem("Enciclopédia Britânica", "R001"));
-  restrictedList.push_back(RestrictedItem("Atlas Mundial", "R002"));
-  restrictedList.push_back(RestrictedItem("Dicionário Oxford", "R003"));
-  restrictedList.push_back(RestrictedItem("Manuscritos Históricos", "R004"));
-  restrictedList.push_back(RestrictedItem("Coleção de Mapas Antigos", "R005"));
+  restrictedList.push_back(RestrictedItem("Enciclopédia Britânica", 13));
+  restrictedList.push_back(RestrictedItem("Atlas Mundial", 14));
+  restrictedList.push_back(RestrictedItem("Dicionário Oxford", 15));
+  restrictedList.push_back(RestrictedItem("Manuscritos Históricos", 16));
+  restrictedList.push_back(RestrictedItem("Coleção de Mapas Antigos", 17));
 
   std::vector<ExhibitionItem> exhibitionList;
   exhibitionList.push_back(ExhibitionItem("Máscara Funerária Egípcia",
-                                          Status::AVAILABLE, "E001",
+                                          Status::AVAILABLE, 18,
                                           "Sala Egito Antigo"));
   exhibitionList.push_back(ExhibitionItem(
-      "Escultura Grega Clássica", Status::AVAILABLE, "E002", "Galeria Grécia"));
+      "Escultura Grega Clássica", Status::AVAILABLE, 19, "Galeria Grécia"));
   exhibitionList.push_back(ExhibitionItem(
-      "Armadura Medieval", Status::AVAILABLE, "E003", "Sala Idade Média"));
+      "Armadura Medieval", Status::AVAILABLE, 20, "Sala Idade Média"));
   exhibitionList.push_back(ExhibitionItem("Pintura Renacentista",
-                                          Status::AVAILABLE, "E004",
+                                          Status::AVAILABLE, 21,
                                           "Galeria Renascimento"));
   exhibitionList.push_back(ExhibitionItem("Fóssil de Dinossauro",
-                                          Status::AVAILABLE, "E005",
+                                          Status::AVAILABLE, 22,
                                           "Sala de Paleontologia"));
 
   std::vector<AcademicMember *> AcademicUsers;
-  AcademicUsers.push_back(new Student("Ana", "002"));
-  AcademicUsers.push_back(new Student("João", "003"));
-  AcademicUsers.push_back(new Student("gustavo", "004"));
-  AcademicUsers.push_back(new Student("João", "005"));
-  AcademicUsers.push_back(new Student("Ana", "006"));
-  AcademicUsers.push_back(new Student("Carlos", "007"));
-  AcademicUsers.push_back(new Professor("gustavo", "008"));
-  AcademicUsers.push_back(new Professor("João", "009"));
-  AcademicUsers.push_back(new Student("Ana", "010"));
-  AcademicUsers.push_back(new Student("Carlos", "011"));
-  AcademicUsers.push_back(new Professor("Carlos", "012"));
-  AcademicUsers.push_back(new Professor("Mariana", "013"));
-  AcademicUsers.push_back(new Professor("Roberto", "014"));
-  AcademicUsers.push_back(new Librarian("Bibliotecário", "001"));
+  AcademicUsers.push_back(new Student("Ana", 1));
+  AcademicUsers.push_back(new Student("João", 2));
+  AcademicUsers.push_back(new Student("gustavo", 3));
+  AcademicUsers.push_back(new Student("João", 4));
+  AcademicUsers.push_back(new Student("Ana", 5));
+  AcademicUsers.push_back(new Student("Carlos", 6));
+  AcademicUsers.push_back(new Professor("gustavo", 7));
+  AcademicUsers.push_back(new Professor("João", 8));
+  AcademicUsers.push_back(new Student("Ana", 9));
+  AcademicUsers.push_back(new Student("Carlos", 10));
+  AcademicUsers.push_back(new Professor("Carlos", 11));
+  AcademicUsers.push_back(new Professor("Mariana", 12));
+  AcademicUsers.push_back(new Professor("Roberto", 13));
+  AcademicUsers.push_back(new Librarian("Bibliotecário", 14));
 
   registeredRoles[3] = {"Login como Bibliotecário",
                         [&](AcademicMember *user) {

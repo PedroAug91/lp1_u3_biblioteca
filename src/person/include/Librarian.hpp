@@ -5,6 +5,7 @@
 #include "../../item/include/ExhibitionItem.hpp"
 #include "../../item/include/LoanableItem.hpp"
 #include "../../item/include/RestrictedItem.hpp"
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -20,23 +21,20 @@ public:
   bool remove(std::string person_id) override;
 
   void registerUser(std::vector<AcademicMember *> &users, const std::string &type,
-                    const std::string &name, const std::string &matricula);
+                    const std::string &name);
 
-  void registerLoanableItem(std::vector<LoanableItem> &items, const std::string &name,
-                            const std::string &id);
+  void registerLoanableItem(std::vector<LoanableItem> &items, const std::string &name);
 
-  void registerRestrictedItem(std::vector<RestrictedItem> &items, const std::string &name,
-                              const std::string &id);
+  void registerRestrictedItem(std::vector<RestrictedItem> &items, const std::string &name);
 
-  void registerExhibitionItem(std::vector<ExhibitionItem> &items, const std::string &name,
-                              const std::string &id);
+  void registerExhibitionItem(std::vector<ExhibitionItem> &items, const std::string &name);
 
   void lendItem(AcademicMember *user, std::vector<LoanableItem> &items,
-                const std::string &itemId);
+                uint32_t itemId);
 
   void applyFine(AcademicMember *user, int daysLate);
 
-  Librarian(std::string n, std::string m);
+  Librarian(std::string n, uint32_t m);
 };
 
 #endif

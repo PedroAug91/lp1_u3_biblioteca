@@ -17,7 +17,7 @@ public:
 
   void RequestRestrictedAccess();
 
-  Professor(std::string n, std::string m);
+  Professor(std::string n, uint32_t m);
 };
 
 #endif

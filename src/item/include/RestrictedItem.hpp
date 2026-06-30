@@ -19,7 +19,7 @@ public:
 
   void RestrictedAccess();
 
-  RestrictedItem(std::string n, std::string i);
+  RestrictedItem(std::string n, uint32_t i);
 };
 
 #endif

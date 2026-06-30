@@ -23,5 +23,5 @@ void RestrictedItem::RestrictedAccess() { // algo para horários disponíveis e
   std::cout << "algum texto de informações restritas";
 }
 
-RestrictedItem::RestrictedItem(std::string n, std::string i)
+RestrictedItem::RestrictedItem(std::string n, uint32_t i)
     : Item(n, Status::UNAVAILABLE, i) {}

@@ -12,7 +12,7 @@ void Item::print() {
   std::cout << "Status: " << static_cast<char>(getStatus()) << "\n";
 }
 
-Item::Item(std::string n, Status s, std::string i) {
+Item::Item(std::string n, Status s, uint32_t i) {
   this->name = n;
   this->id = i;
   this->setStatus(s);

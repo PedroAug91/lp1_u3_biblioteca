@@ -20,9 +20,8 @@ void LoanableItem::accessItem() {
   std::cout << "\n\n";
 }
 
-LoanableItem::LoanableItem(std::string n, Status s, std::string i,
-                           std::string da, std::string rid)
+LoanableItem::LoanableItem(std::string n, Status s, uint32_t i,
+                           std::string da, uint32_t rid)
     : PublicItem(n, s, i, da) {
-
   responsibleId = rid;
 }

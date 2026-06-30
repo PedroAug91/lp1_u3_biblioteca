@@ -7,7 +7,7 @@
 bool Student::create(Person *p_person) {
   Student *stud = dynamic_cast<Student *>(p_person);
   if (!stud) return false;
-  std::string path = "library_db/" + stud->matricula + ".data";
+  std::string path = "library_db/" + std::to_string(stud->matricula) + ".data";
   std::ofstream file(path);
   if (!file.is_open()) return false;
   file << "name=" << stud->name << "\n";

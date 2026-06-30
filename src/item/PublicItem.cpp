@@ -24,7 +24,7 @@ void PublicItem::accessItem() {
   std::cout << "\n\n";
 }
 
-PublicItem::PublicItem(std::string n, Status s, std::string i, std::string da)
+PublicItem::PublicItem(std::string n, Status s, uint32_t i, std::string da)
     : Item(n, s, i) {
   this->setDisplayArea(da);
 }

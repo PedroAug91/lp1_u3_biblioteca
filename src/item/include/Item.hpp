@@ -4,14 +4,15 @@
 #include "../../interfaces/Archivable.hpp"
 #include "../../interfaces/Printable.hpp"
 #include "Status.hpp"
+#include <cstdint>
 #include <string>
 
-class Item : public Printable, public Archivable { // Classe abstrata
+class Item : public Printable, public Archivable {
 private:
   Status status;
 
 public:
-  std::string id;
+  uint32_t id;
   std::string name;
 
   virtual void accessItem() = 0;
@@ -21,7 +22,7 @@ public:
   Status getStatus() const;
   virtual void setStatus(Status s);
 
-  Item(std::string n, Status s, std::string i);
+  Item(std::string n, Status s, uint32_t i);
 
   virtual ~Item();
 };

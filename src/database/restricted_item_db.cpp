@@ -5,7 +5,7 @@
 #include <string>
 
 bool RestrictedItem::create(Person *p_person) {
-  std::string path = "library_db/" + this->id + ".data";
+  std::string path = "library_db/" + std::to_string(this->id) + ".data";
   std::ofstream file(path);
   if (!file.is_open()) return false;
   file << "id=" << this->id << "\n";
