@@ -1,127 +1,112 @@
 #include "include/Librarian.hpp"
 #include "include/Professor.hpp"
 #include "include/Student.hpp"
+#include <algorithm>
 #include <cstdio>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
+
+namespace fs = std::filesystem;
 
 void Librarian::print() {
   std::cout << "--- Bibliotecário ---\n";
   std::cout << "Nome: " << name << '\n' << "Matrícula: " << matricula << '\n';
 }
 
-bool Librarian::create(Person *p_person) {
-  Librarian *lib = dynamic_cast<Librarian *>(p_person);
-  if (!lib) return false;
-  std::string path = "library_db/" + std::to_string(lib->matricula) + ".data";
-  std::ofstream file(path);
-  if (!file.is_open()) return false;
-  file << "name=" << lib->name << "\n";
-  file << "matricula=" << lib->matricula << "\n";
-  file << "type=librarian\n";
-  return true;
-}
-
-bool Librarian::read(std::string person_id) {
-  std::string path = "library_db/" + person_id + ".data";
-  std::ifstream file(path);
-  if (!file.is_open()) {
-    std::cout << "Arquivo não encontrado: " << path << "\n";
-    return false;
+static uint32_t getNextUserId() {
+  uint32_t maxId = 0;
+  if (!fs::exists("library_db")) return 1;
+  for (auto &entry : fs::directory_iterator("library_db")) {
+    auto path = entry.path();
+    if (path.extension() == ".usr") {
+      try {
+        uint32_t id = std::stoul(path.stem().string());
+        if (id > maxId) maxId = id;
+      } catch (...) {}
+    }
   }
-  std::string line;
-  while (std::getline(file, line))
-    std::cout << line << "\n";
-  return true;
+  return maxId + 1;
 }
 
-bool Librarian::update(std::string person_id) {
-  std::string path = "library_db/" + person_id + ".data";
-  std::ofstream file(path);
-  if (!file.is_open()) return false;
-  file << "name=" << this->name << "\n";
-  file << "matricula=" << this->matricula << "\n";
-  file << "type=librarian\n";
-  return true;
+static uint32_t getNextItemId(const std::string &ext) {
+  uint32_t maxId = 0;
+  if (!fs::exists("library_db")) return 1;
+  for (auto &entry : fs::directory_iterator("library_db")) {
+    auto path = entry.path();
+    if (path.extension() == ext) {
+      try {
+        uint32_t id = std::stoul(path.stem().string());
+        if (id > maxId) maxId = id;
+      } catch (...) {}
+    }
+  }
+  return maxId + 1;
 }
 
-bool Librarian::remove(std::string person_id) {
-  std::string path = "library_db/" + person_id + ".data";
-  return std::remove(path.c_str()) == 0;
-}
-
-void Librarian::registerUser(std::vector<AcademicMember *> &users,
-                              const std::string &type,
+void Librarian::registerUser(const std::string &type,
                               const std::string &name) {
-  uint32_t newMat = 1;
-  for (auto *u : users)
-    if (u->matricula >= newMat) newMat = u->matricula + 1;
+  uint32_t newMat = getNextUserId();
 
   if (type == "student") {
-    users.push_back(new Student(name, newMat));
+    Student s(name, newMat);
+    s.create(&s);
     std::cout << "Estudante " << name << " registrado com matrícula " << newMat << "\n";
   } else if (type == "professor") {
-    users.push_back(new Professor(name, newMat));
+    Professor p(name, newMat);
+    p.create(&p);
     std::cout << "Professor " << name << " registrado com matrícula " << newMat << "\n";
   } else {
     std::cout << "Tipo de usuário desconhecido: " << type << "\n";
   }
 }
 
-void Librarian::registerLoanableItem(std::vector<LoanableItem> &items,
-                                      const std::string &name) {
-  uint32_t newId = 1;
-  for (auto &item : items)
-    if (item.id >= newId) newId = item.id + 1;
-
-  items.push_back(LoanableItem(name, Status::AVAILABLE, newId));
+void Librarian::registerLoanableItem(const std::string &name) {
+  uint32_t newId = getNextItemId(".lnb");
+  LoanableItem item(name, Status::AVAILABLE, newId);
+  item.create(nullptr);
   std::cout << "Item emprestável " << name << " registrado com ID " << newId << "\n";
 }
 
-void Librarian::registerRestrictedItem(std::vector<RestrictedItem> &items,
-                                        const std::string &name) {
-  uint32_t newId = 1;
-  for (auto &item : items)
-    if (item.id >= newId) newId = item.id + 1;
-
-  items.push_back(RestrictedItem(name, newId));
+void Librarian::registerRestrictedItem(const std::string &name) {
+  uint32_t newId = getNextItemId(".rst");
+  RestrictedItem item(name, newId);
+  item.create(nullptr);
   std::cout << "Item restrito " << name << " registrado com ID " << newId << "\n";
 }
 
-void Librarian::registerExhibitionItem(std::vector<ExhibitionItem> &items,
-                                        const std::string &name) {
-  uint32_t newId = 1;
-  for (auto &item : items)
-    if (item.id >= newId) newId = item.id + 1;
-
-  items.push_back(ExhibitionItem(name, Status::AVAILABLE, newId));
+void Librarian::registerExhibitionItem(const std::string &name) {
+  uint32_t newId = getNextItemId(".exb");
+  ExhibitionItem item(name, Status::AVAILABLE, newId);
+  item.create(nullptr);
   std::cout << "Item de exposição " << name << " registrado com ID " << newId << "\n";
 }
 
-void Librarian::lendItem(AcademicMember *user, std::vector<LoanableItem> &items,
-                          uint32_t itemId) {
-  for (auto &item : items) {
-    if (item.id == itemId) {
-      if (item.getStatus() == Status::AVAILABLE) {
-        if (user->ActiveLoans < user->maxActiveLoans) {
-          item.setStatus(Status::BORROWED);
-          item.responsibleId = user->matricula;
-          item.setDisplayArea("não está na biblioteca");
-          user->ActiveLoans++;
-          std::cout << "Item " << item.name << " emprestado para " << user->name
-                    << " (" << user->matricula << ")\n";
-        } else {
-          std::cout << "Usuário " << user->name << " atingiu o limite de "
-                    << user->maxActiveLoans << " empréstimos.\n";
-        }
-      } else {
-        std::cout << "Item " << item.name << " não está disponível.\n";
-      }
-      return;
-    }
+void Librarian::lendItem(AcademicMember *user, uint32_t itemId) {
+  LoanableItem item("", Status::AVAILABLE, itemId);
+  if (!item.read(std::to_string(itemId))) {
+    std::cout << "Item com ID " << itemId << " não encontrado.\n";
+    return;
   }
-  std::cout << "Item com ID " << itemId << " não encontrado.\n";
+
+  if (item.getStatus() == Status::AVAILABLE) {
+    if (user->ActiveLoans < user->maxActiveLoans) {
+      item.setStatus(Status::BORROWED);
+      item.responsibleId = user->matricula;
+      item.setDisplayArea("não está na biblioteca");
+      user->ActiveLoans++;
+      item.update(std::to_string(itemId));
+      user->update(std::to_string(user->matricula));
+      std::cout << "Item " << item.name << " emprestado para " << user->name
+                << " (" << user->matricula << ")\n";
+    } else {
+      std::cout << "Usuário " << user->name << " atingiu o limite de "
+                << user->maxActiveLoans << " empréstimos.\n";
+    }
+  } else {
+    std::cout << "Item " << item.name << " não está disponível.\n";
+  }
 }
 
 void Librarian::applyFine(AcademicMember *user, int daysLate) {

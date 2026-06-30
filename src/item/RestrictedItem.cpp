@@ -2,7 +2,7 @@
 #include "include/Status.hpp"
 #include <iostream>
 
-void RestrictedItem::setStatus(Status s) {
+void RestrictedItem::setStatus(Status) {
   std::cout << "O status de um RestrictedItem não pode ser alterado.\n";
 }
 

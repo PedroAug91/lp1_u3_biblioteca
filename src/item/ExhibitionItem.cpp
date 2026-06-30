@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 
-void ExhibitionItem::setDisplayArea(std::string s) {
+void ExhibitionItem::setDisplayArea(std::string) {
   std::cout << "Essa exposiçao não pode ser retirada de seu local:"
             << this->getDisplayArea();
 }

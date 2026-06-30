@@ -1,23 +1,24 @@
-#include "../person/include/AcademicMember.hpp"
+#include "../person/include/Librarian.hpp"
 #include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <string>
 
-bool AcademicMember::create(Person *p_person) {
-  AcademicMember *member = dynamic_cast<AcademicMember *>(p_person);
-  if (!member) return false;
-  std::string path = "library_db/" + std::to_string(member->matricula) + ".usr";
+bool Librarian::create(Person *p_person) {
+  Librarian *lib = dynamic_cast<Librarian *>(p_person);
+  if (!lib) return false;
+  std::string path = "library_db/" + std::to_string(lib->matricula) + ".usr";
   std::ofstream file(path);
   if (!file.is_open()) return false;
-  file << "name=" << member->name << "\n";
-  file << "matricula=" << member->matricula << "\n";
-  file << "maxActiveLoans=" << member->maxActiveLoans << "\n";
-  file << "ActiveLoans=" << member->ActiveLoans << "\n";
+  file << "name=" << lib->name << "\n";
+  file << "matricula=" << lib->matricula << "\n";
+  file << "maxActiveLoans=" << lib->maxActiveLoans << "\n";
+  file << "ActiveLoans=" << lib->ActiveLoans << "\n";
+  file << "type=librarian\n";
   return true;
 }
 
-bool AcademicMember::read(std::string person_id) {
+bool Librarian::read(std::string person_id) {
   std::string path = "library_db/" + person_id + ".usr";
   std::ifstream file(path);
   if (!file.is_open()) return false;
@@ -35,7 +36,7 @@ bool AcademicMember::read(std::string person_id) {
   return true;
 }
 
-bool AcademicMember::update(std::string person_id) {
+bool Librarian::update(std::string person_id) {
   std::string path = "library_db/" + person_id + ".usr";
   std::ofstream file(path);
   if (!file.is_open()) return false;
@@ -43,10 +44,11 @@ bool AcademicMember::update(std::string person_id) {
   file << "matricula=" << this->matricula << "\n";
   file << "maxActiveLoans=" << this->maxActiveLoans << "\n";
   file << "ActiveLoans=" << this->ActiveLoans << "\n";
+  file << "type=librarian\n";
   return true;
 }
 
-bool AcademicMember::remove(std::string person_id) {
+bool Librarian::remove(std::string person_id) {
   std::string path = "library_db/" + person_id + ".usr";
   return std::remove(path.c_str()) == 0;
 }
