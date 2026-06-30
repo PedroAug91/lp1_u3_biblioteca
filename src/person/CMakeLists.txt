@@ -1,5 +1,6 @@
 add_library(person
     AcademicMember.cpp
+    Librarian.cpp
     Professor.cpp
     Student.cpp
 )

@@ -3,6 +3,7 @@
 #include "item/include/RestrictedItem.hpp"
 #include "item/include/Status.hpp"
 #include "person/include/AcademicMember.hpp"
+#include "person/include/Librarian.hpp"
 #include "person/include/Professor.hpp"
 #include "person/include/Student.hpp"
 
@@ -95,9 +96,21 @@ static void cmdShowItems(std::vector<LoanableItem> &loanable,
                          std::vector<RestrictedItem> &restricted,
                          std::vector<ExhibitionItem> &exhibition) {
   std::cout << "\n--- Itens para Empréstimo ---\n";
-  for (auto &i : loanable)
-    std::cout << "  " << i.id << " - " << i.name << " ["
-              << static_cast<char>(i.getStatus()) << "]\n";
+  for (auto &i : loanable) {
+    std::cout << "  " << i.id << " - " << i.name << " [";
+    switch (static_cast<char>(i.getStatus())) {
+    case 'A':
+      std::cout << "Disponível";
+      break;
+    case 'U':
+      std::cout << "Indisponível";
+      break;
+    case 'B':
+      std::cout << "Emprestado";
+      break;
+    }
+    std::cout << "]\n";
+  }
   std::cout << "\n--- Itens Restritos ---\n";
   for (auto &i : restricted)
     std::cout << "  " << i.id << " - " << i.name << "\n";
@@ -121,6 +134,109 @@ static void professorSession(AcademicMember *user) {
     prof->RequestRestrictedAccess();
 }
 
+static void librarianSession(AcademicMember *user,
+                             std::vector<LoanableItem> &loanable,
+                             std::vector<RestrictedItem> &restricted,
+                             std::vector<ExhibitionItem> &exhibition,
+                             std::vector<AcademicMember *> &users) {
+  clearScreen();
+  std::cout << "Bem-vindo, bibliotecário " << user->name << "!\n";
+  Librarian *lib = dynamic_cast<Librarian *>(user);
+  if (!lib) return;
+
+  bool firstAccess = true;
+  while (true) {
+    if (!firstAccess) {
+      wait();
+      clearScreen();
+    }
+    firstAccess = false;
+    Menu libMenu("Menu do Bibliotecário");
+    libMenu.add(1, "Registrar usuário");
+    libMenu.add(2, "Registrar item emprestável");
+    libMenu.add(3, "Registrar item restrito");
+    libMenu.add(4, "Registrar item de exposição");
+    libMenu.add(5, "Emprestar item a usuário");
+    libMenu.add(6, "Aplicar multa");
+    libMenu.add(7, "Listar itens");
+    libMenu.add(8, "Ver meus dados");
+    libMenu.add(0, "Sair");
+
+    int choice = libMenu.show();
+    if (choice == 0) break;
+
+    switch (choice) {
+    case 1: {
+      std::string type, name, mat;
+      std::cout << "Tipo (student/professor): ";
+      std::getline(std::cin, type);
+      std::cout << "Nome: ";
+      std::getline(std::cin, name);
+      std::cout << "Matrícula: ";
+      std::getline(std::cin, mat);
+      lib->registerUser(users, type, name, mat);
+      break;
+    }
+    case 2: {
+      std::string name, id;
+      std::cout << "Nome do item: ";
+      std::getline(std::cin, name);
+      std::cout << "ID: ";
+      std::getline(std::cin, id);
+      lib->registerLoanableItem(loanable, name, id);
+      break;
+    }
+    case 3: {
+      std::string name, id;
+      std::cout << "Nome do item: ";
+      std::getline(std::cin, name);
+      std::cout << "ID: ";
+      std::getline(std::cin, id);
+      lib->registerRestrictedItem(restricted, name, id);
+      break;
+    }
+    case 4: {
+      std::string name, id;
+      std::cout << "Nome do item: ";
+      std::getline(std::cin, name);
+      std::cout << "ID: ";
+      std::getline(std::cin, id);
+      lib->registerExhibitionItem(exhibition, name, id);
+      break;
+    }
+    case 5: {
+      AcademicMember *target = pickUser<AcademicMember>(users);
+      if (target) {
+        std::string itemId;
+        std::cout << "ID do item: ";
+        std::getline(std::cin, itemId);
+        lib->lendItem(target, loanable, itemId);
+      }
+      break;
+    }
+    case 6: {
+      AcademicMember *target = pickUser<AcademicMember>(users);
+      if (target) {
+        int days;
+        std::cout << "Dias em atraso: ";
+        std::cin >> days;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        lib->applyFine(target, days);
+      }
+      break;
+    }
+    case 7:
+      cmdShowItems(loanable, restricted, exhibition);
+      break;
+    case 8:
+      lib->print();
+      break;
+    default:
+      std::cout << "Opção inválida.\n";
+    }
+  }
+}
+
 // ── registered roles (extend here to add new roles) ────────────────
 static std::map<int, std::pair<std::string, RoleHandler>> registeredRoles;
 
@@ -131,8 +247,6 @@ static void registerRole(int id, std::string label, RoleHandler handler) {
 static void initRoles() {
   registerRole(1, "Login como Aluno", studentSession);
   registerRole(2, "Login como Professor", professorSession);
-  // Exemplo futura expansão:
-  // registerRole(3, "Login como Bibliotecário", librarianSession);
 }
 
 // ── main ───────────────────────────────────────────────────────────
@@ -195,6 +309,13 @@ int main() {
   AcademicUsers.push_back(new Professor("Carlos", "012"));
   AcademicUsers.push_back(new Professor("Mariana", "013"));
   AcademicUsers.push_back(new Professor("Roberto", "014"));
+  AcademicUsers.push_back(new Librarian("Bibliotecário", "001"));
+
+  registeredRoles[3] = {"Login como Bibliotecário",
+                        [&](AcademicMember *user) {
+                          librarianSession(user, LoanableList, restrictedList,
+                                           exhibitionList, AcademicUsers);
+                        }};
 
   // ── main loop ────────────────────────────────────────────────────
   while (true) {
@@ -220,6 +341,8 @@ int main() {
       user = pickUser<Student>(AcademicUsers);
     else if (roleChoice == 2)
       user = pickUser<Professor>(AcademicUsers);
+    else if (roleChoice == 3)
+      user = pickUser<Librarian>(AcademicUsers);
 
     if (!user) {
       std::cout << "Operação cancelada.\n";
@@ -230,7 +353,8 @@ int main() {
     // Role-specific welcome
     it->second.second(user);
 
-    // Shared user session menu
+    // Shared user session menu (skip for librarian, which has its own menu)
+    if (roleChoice == 3) continue;
     bool firstAccess = true;
     while (true) {
       if (!firstAccess) {
