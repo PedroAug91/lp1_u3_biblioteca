@@ -22,10 +22,6 @@ public:
   bool update(std::string person_id) override;
   bool remove(std::string person_id) override;
 
-  void BorrowItem(uint32_t itemId);
-
-  void ReturnItem(uint32_t itemId);
-
   AcademicMember(std::string n, uint32_t m, int maxLoans, int loans);
 };
 

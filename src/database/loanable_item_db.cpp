@@ -13,6 +13,8 @@ bool LoanableItem::create(Person *) {
   file << "status=" << static_cast<char>(this->getStatus()) << "\n";
   file << "displayArea=" << this->getDisplayArea() << "\n";
   file << "responsibleId=" << this->responsibleId << "\n";
+  file << "borrowedAt=" << this->borrowedAt << "\n";
+  file << "dueDate=" << this->dueDate << "\n";
   return true;
 }
 
@@ -31,6 +33,8 @@ bool LoanableItem::read(std::string item_id) {
     else if (key == "status") setStatus(static_cast<Status>(value[0]));
     else if (key == "displayArea") setDisplayArea(value);
     else if (key == "responsibleId") responsibleId = std::stoul(value);
+    else if (key == "borrowedAt") borrowedAt = static_cast<time_t>(std::stoll(value));
+    else if (key == "dueDate") dueDate = static_cast<time_t>(std::stoll(value));
   }
   return true;
 }
@@ -44,6 +48,8 @@ bool LoanableItem::update(std::string item_id) {
   file << "status=" << static_cast<char>(this->getStatus()) << "\n";
   file << "displayArea=" << this->getDisplayArea() << "\n";
   file << "responsibleId=" << this->responsibleId << "\n";
+  file << "borrowedAt=" << this->borrowedAt << "\n";
+  file << "dueDate=" << this->dueDate << "\n";
   return true;
 }
 

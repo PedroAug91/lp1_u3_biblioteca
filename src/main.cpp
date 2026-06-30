@@ -207,20 +207,6 @@ static AcademicMember *pickUser() {
 }
 
 // ── session helpers ────────────────────────────────────────────────
-static void cmdBorrow(AcademicMember *user) {
-  std::cout << "ID do item: ";
-  uint32_t id;
-  std::cin >> id;
-  user->BorrowItem(id);
-}
-
-static void cmdReturn(AcademicMember *user) {
-  std::cout << "ID do item: ";
-  uint32_t id;
-  std::cin >> id;
-  user->ReturnItem(id);
-}
-
 static void cmdShowItems() {
   auto loanable = loadAllLoanable();
   auto restricted = loadAllRestricted();
@@ -288,9 +274,6 @@ static void visitorSession() {
 
     switch (choice) {
     case 1:
-      vis.searchItem();
-      break;
-    case 2:
       cmdShowItems();
       break;
     default:
@@ -319,9 +302,10 @@ static void librarianSession(AcademicMember *user) {
     libMenu.add(3, "Registrar item restrito");
     libMenu.add(4, "Registrar item de exposição");
     libMenu.add(5, "Emprestar item a usuário");
-    libMenu.add(6, "Aplicar multa");
-    libMenu.add(7, "Listar itens");
-    libMenu.add(8, "Ver meus dados");
+    libMenu.add(6, "Receber devolução de item");
+    libMenu.add(7, "Aplicar multa");
+    libMenu.add(8, "Listar itens");
+    libMenu.add(9, "Ver meus dados");
     libMenu.add(0, "Sair");
 
     int choice = libMenu.show();
@@ -362,6 +346,12 @@ static void librarianSession(AcademicMember *user) {
     case 5: {
       AcademicMember *target = pickUser<AcademicMember>();
       if (target) {
+        std::cout << "\n--- Itens disponíveis para empréstimo ---\n";
+        auto allItems = loadAllLoanable();
+        for (auto &i : allItems) {
+          if (i.getStatus() == Status::AVAILABLE)
+            std::cout << "  " << i.id << " - " << i.name << "\n";
+        }
         uint32_t itemId;
         std::cout << "ID do item: ";
         std::cin >> itemId;
@@ -374,6 +364,29 @@ static void librarianSession(AcademicMember *user) {
     case 6: {
       AcademicMember *target = pickUser<AcademicMember>();
       if (target) {
+        std::cout << "\n--- Itens emprestados por " << target->name << " ---\n";
+        auto allItems = loadAllLoanable();
+        bool found = false;
+        for (auto &i : allItems) {
+          if (i.isBorrowed() && i.responsibleId == target->matricula) {
+            found = true;
+            std::cout << "  " << i.id << " - " << i.name << "\n";
+          }
+        }
+        if (!found)
+          std::cout << "  (nenhum item emprestado)\n";
+        uint32_t itemId;
+        std::cout << "ID do item para devolução: ";
+        std::cin >> itemId;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        lib->receiveReturn(target, itemId);
+        delete target;
+      }
+      break;
+    }
+    case 7: {
+      AcademicMember *target = pickUser<AcademicMember>();
+      if (target) {
         int days;
         std::cout << "Dias em atraso: ";
         std::cin >> days;
@@ -383,10 +396,10 @@ static void librarianSession(AcademicMember *user) {
       }
       break;
     }
-    case 7:
+    case 8:
       cmdShowItems();
       break;
-    case 8:
+    case 9:
       lib->print();
       break;
     default:
@@ -522,11 +535,8 @@ int main() {
       }
       firstAccess = false;
       Menu userMenu("Menu do Usuário");
-      userMenu.add(1, "Buscar item");
-      userMenu.add(2, "Pegar item emprestado");
-      userMenu.add(3, "Devolver item");
-      userMenu.add(4, "Listar itens");
-      userMenu.add(5, "Ver meus dados");
+      userMenu.add(1, "Listar itens");
+      userMenu.add(2, "Ver meus dados");
       userMenu.add(0, "Sair");
 
       int userChoice = userMenu.show();
@@ -535,18 +545,9 @@ int main() {
 
       switch (userChoice) {
       case 1:
-        user->searchItem();
-        break;
-      case 2:
-        cmdBorrow(user);
-        break;
-      case 3:
-        cmdReturn(user);
-        break;
-      case 4:
         cmdShowItems();
         break;
-      case 5:
+      case 2:
         user->print();
         break;
       default:

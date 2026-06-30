@@ -68,6 +68,10 @@ class PublicItem{
 
 class LoanableItem{
     +uint32_t responsibleId
+    +time_t borrowedAt
+    +time_t dueDate
+    +isBorrowed() bool
+    +daysRemaining() int
     +accessItem()
 }
 
@@ -133,8 +137,6 @@ class AcademicMember{
     +int maxActiveLoans
     +int ActiveLoans
     +searchItem()
-    +BorrowItem(uint32_t)
-    +ReturnItem(uint32_t)
     +print()
 }
 

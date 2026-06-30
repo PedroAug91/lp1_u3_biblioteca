@@ -98,6 +98,8 @@ void Librarian::lendItem(AcademicMember *user, uint32_t itemId) {
       item.setStatus(Status::BORROWED);
       item.responsibleId = user->matricula;
       item.setDisplayArea("não está na biblioteca");
+      item.borrowedAt = time(nullptr);
+      item.dueDate = item.borrowedAt + 14 * 24 * 60 * 60;
       user->ActiveLoans++;
       item.update(std::to_string(itemId));
       user->update(std::to_string(user->matricula));
@@ -109,6 +111,29 @@ void Librarian::lendItem(AcademicMember *user, uint32_t itemId) {
     }
   } else {
     std::cout << "Item " << item.name << " não está disponível.\n";
+  }
+}
+
+void Librarian::receiveReturn(AcademicMember *user, uint32_t itemId) {
+  LoanableItem item("", Status::AVAILABLE, itemId);
+  if (!item.read(std::to_string(itemId))) {
+    std::cout << "Item com ID " << itemId << " não encontrado.\n";
+    return;
+  }
+
+  if (item.isBorrowed() && item.responsibleId == user->matricula) {
+    item.responsibleId = 0;
+    item.borrowedAt = 0;
+    item.dueDate = 0;
+    item.setStatus(Status::AVAILABLE);
+    item.setDisplayArea("depósito de devoluções");
+    user->ActiveLoans--;
+    item.update(std::to_string(itemId));
+    user->update(std::to_string(user->matricula));
+    std::cout << "Item " << item.name << " devolvido por " << user->name
+              << " (" << user->matricula << ")\n";
+  } else {
+    std::cout << "Este item não está emprestado a " << user->name << ".\n";
   }
 }
 

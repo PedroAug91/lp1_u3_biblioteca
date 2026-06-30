@@ -26,6 +26,8 @@ public:
 
   void lendItem(AcademicMember *user, uint32_t itemId);
 
+  void receiveReturn(AcademicMember *user, uint32_t itemId);
+
   void applyFine(AcademicMember *user, int daysLate);
 
   Librarian(std::string n, uint32_t m);

@@ -2,10 +2,16 @@
 #define LOANABLEITEM_H
 
 #include "PublicItem.hpp"
+#include <ctime>
 
 class LoanableItem : public PublicItem {
 public:
   uint32_t responsibleId;
+  time_t borrowedAt;
+  time_t dueDate;
+
+  bool isBorrowed() const { return borrowedAt != 0; }
+  int daysRemaining() const;
 
   void accessItem() override;
 

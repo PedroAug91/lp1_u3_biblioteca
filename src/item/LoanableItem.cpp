@@ -1,9 +1,26 @@
 #include "include/LoanableItem.hpp"
+#include <iomanip>
 #include <iostream>
+
+int LoanableItem::daysRemaining() const {
+  if (borrowedAt == 0) return 0;
+  return static_cast<int>(difftime(dueDate, time(nullptr)) / (24 * 60 * 60));
+}
 
 void LoanableItem::print() {
   PublicItem::print();
   std::cout << "Responsável: " << responsibleId << "\n";
+  if (isBorrowed()) {
+    char buf[64];
+    struct tm *tm_info = localtime(&dueDate);
+    strftime(buf, sizeof(buf), "%d/%m/%Y", tm_info);
+    std::cout << "Devolver até: " << buf << "\n";
+    int rem = daysRemaining();
+    if (rem < 0)
+      std::cout << "Status: ATRASADO (" << (-rem) << " dia(s))\n";
+    else
+      std::cout << "Status: " << rem << " dia(s) restante(s)\n";
+  }
 }
 
 void LoanableItem::accessItem() {
@@ -22,6 +39,6 @@ void LoanableItem::accessItem() {
 
 LoanableItem::LoanableItem(std::string n, Status s, uint32_t i,
                            std::string da, uint32_t rid)
-    : PublicItem(n, s, i, da) {
+    : PublicItem(n, s, i, da), borrowedAt(0), dueDate(0) {
   responsibleId = rid;
 }
